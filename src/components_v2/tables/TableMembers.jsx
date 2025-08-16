@@ -19,12 +19,15 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
+    Alert,
+    Snackbar,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import { useUsers } from "../../hooks/useUsers";
-import CreateMemberForm from "../forms/CreateMemberForm";
+import MemberForm from "../forms/MemberForm";
+import { userService } from "../../services/userService";
 
 function TablePaginationActions(props) {
     const theme = useTheme();
@@ -89,17 +92,19 @@ const TableMembers = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState("");
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
-    const [createFormData, setCreateFormData] = useState({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        designation: "",
-        joinDate: "",
-        employeeId: "",
+    const [loading, setLoading] = useState(false);
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
     });
 
-    const { data: users, isLoading: usersLoading, error: usersError } = useUsers();
+    const { data: users, refetch, isLoading: usersLoading, error: usersError } = useUsers();
+
+    // Debug logging to understand data structure
+    console.log('useUsers hook result:', { users, usersLoading, usersError });
+    console.log('users type:', typeof users);
+    console.log('users is array:', Array.isArray(users));
 
 
     const handleChangePage = (event, newPage) => {
@@ -121,29 +126,74 @@ const TableMembers = () => {
 
     const handleCloseCreateDialog = () => {
         setOpenCreateDialog(false);
-        setCreateFormData({
-            firstName: "",
-            lastName: "",
-            email: "",
-            phone: "",
-            designation: "",
-            joinDate: "",
-            employeeId: "",
-        });
     };
 
-    const handleCreateFormChange = (field, value) => {
-        setCreateFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+    const handleCreateMember = async (formData) => {
+        console.log('Form data received:', formData);
+
+        try {
+            setLoading(true);
+
+            // Format the data to match the API expectations
+            const userData = {
+                ...formData,
+                // Ensure joinDate is properly formatted
+                joinDate: formData.joinDate ? new Date(formData.joinDate).toISOString() : new Date().toISOString(),
+                // Set default values for required fields
+                isActive: true,
+                emailVerified: false,
+                lastLogin: new Date().toISOString(),
+            };
+
+            console.log('Formatted user data:', userData);
+
+            // Call the userService to create the user
+            const response = await userService.createUser(userData);
+            console.log('API response:', response);
+
+            // Show success message
+            setSnackbar({
+                open: true,
+                message: 'Member created successfully!',
+                severity: 'success'
+            });
+
+            // Close dialog and refresh the users list
+            handleCloseCreateDialog();
+            refetch();
+
+        } catch (error) {
+            console.error('Error creating member:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response,
+                status: error.status,
+                data: error.data
+            });
+
+            // Show error message
+            let errorMessage = 'Failed to create member. Please try again.';
+
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.data?.message) {
+                errorMessage = error.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            setSnackbar({
+                open: true,
+                message: errorMessage,
+                severity: 'error'
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleCreateMember = (e) => {
-        e.preventDefault();
-        // TODO: Implement API call to create new member
-        console.log("Creating new member:", createFormData);
-        handleCloseCreateDialog();
+    const handleCloseSnackbar = () => {
+        setSnackbar(prev => ({ ...prev, open: false }));
     };
 
     return (
@@ -244,116 +294,137 @@ const TableMembers = () => {
                         </TableHead>
 
                         <TableBody>
-                            {users?.data?.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    sx={{
-                                        "& td": {
-                                            padding: "15px 20px",
-                                            fontSize: "14px",
-                                        },
-                                    }}
-                                >
-                                    <TableCell className="border-bottom">{row.employeeId}</TableCell>
-
-                                    <TableCell className="text-black border-bottom">
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: "12px",
-                                            }}
-                                        >
-                                            <Box sx={{ flexShrink: "0" }}>
-                                                <img
-                                                    src={row.avatar}
-                                                    alt="."
-                                                    width={40}
-                                                    height={40}
-                                                    style={{ borderRadius: "100px" }}
-                                                />
-                                            </Box>
-
-                                            <Box>
-                                                <Typography
-                                                    sx={{
-                                                        fontSize: "15px",
-                                                        fontWeight: "500",
-                                                    }}
-                                                    className="text-black"
-                                                >
-                                                    {row.firstName} {row.lastName}
-                                                </Typography>
-                                            </Box>
-                                        </Box>
-                                    </TableCell>
-
-                                    <TableCell className="border-bottom">{row.phone}</TableCell>
-
-                                    <TableCell className="border-bottom">{row.designation}</TableCell>
-
-                                    <TableCell className="border-bottom">
-                                        {row.joinDate}
-                                    </TableCell>
-
-                                    <TableCell className="border-bottom">
-                                        {row.hasLoan ? "Yes" : "No"}
-                                    </TableCell>
-
-                                    <TableCell className="border-bottom">
-                                        {row.hasChitfund ? "Yes" : "No"}
-                                    </TableCell>
-
-                                    <TableCell className="border-bottom">
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                            }}
-                                        >
-                                            <IconButton
-                                                aria-label="view"
-                                                color="primary"
-                                                sx={{ padding: "5px" }}
-                                            >
-                                                <i
-                                                    className="material-symbols-outlined"
-                                                    style={{ fontSize: "16px" }}
-                                                >
-                                                    visibility
-                                                </i>
-                                            </IconButton>
-
-                                            <IconButton
-                                                aria-label="edit"
-                                                color="secondary"
-                                                sx={{ padding: "5px" }}
-                                            >
-                                                <i
-                                                    className="material-symbols-outlined"
-                                                    style={{ fontSize: "16px" }}
-                                                >
-                                                    edit
-                                                </i>
-                                            </IconButton>
-
-                                            <IconButton
-                                                aria-label="delete"
-                                                color="error"
-                                                sx={{ padding: "5px" }}
-                                            >
-                                                <i
-                                                    className="material-symbols-outlined"
-                                                    style={{ fontSize: "16px" }}
-                                                >
-                                                    delete
-                                                </i>
-                                            </IconButton>
-                                        </Box>
+                            {usersLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                                        <Typography>Loading users...</Typography>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            ) : usersError ? (
+                                <TableRow>
+                                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                                        <Typography color="error">
+                                            Error loading users: {usersError.message}
+                                        </Typography>
+                                    </TableCell>
+                                </TableRow>
+                            ) : !users || users.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                                        <Typography>No users found</Typography>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                users && users.data.map((row) => (
+                                    <TableRow
+                                        key={row.id}
+                                        sx={{
+                                            "& td": {
+                                                padding: "15px 20px",
+                                                fontSize: "14px",
+                                            },
+                                        }}
+                                    >
+                                        <TableCell className="border-bottom">{row.employeeId}</TableCell>
 
+                                        <TableCell className="text-black border-bottom">
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "12px",
+                                                }}
+                                            >
+                                                <Box sx={{ flexShrink: "0" }}>
+                                                    <img
+                                                        src={row.avatar}
+                                                        alt="."
+                                                        width={40}
+                                                        height={40}
+                                                        style={{ borderRadius: "100px" }}
+                                                    />
+                                                </Box>
+
+                                                <Box>
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: "15px",
+                                                            fontWeight: "500",
+                                                        }}
+                                                        className="text-black"
+                                                    >
+                                                        {row.firstName} {row.lastName}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </TableCell>
+
+                                        <TableCell className="border-bottom">{row.phone}</TableCell>
+
+                                        <TableCell className="border-bottom">{row.designation}</TableCell>
+
+                                        <TableCell className="border-bottom">
+                                            {row.joinDate}
+                                        </TableCell>
+
+                                        <TableCell className="border-bottom">
+                                            {row.hasLoan ? "Yes" : "No"}
+                                        </TableCell>
+
+                                        <TableCell className="border-bottom">
+                                            {row.hasChitfund ? "Yes" : "No"}
+                                        </TableCell>
+
+                                        <TableCell className="border-bottom">
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                }}
+                                            >
+                                                <IconButton
+                                                    aria-label="view"
+                                                    color="primary"
+                                                    sx={{ padding: "5px" }}
+                                                >
+                                                    <i
+                                                        className="material-symbols-outlined"
+                                                        style={{ fontSize: "16px" }}
+                                                    >
+                                                        visibility
+                                                    </i>
+                                                </IconButton>
+
+                                                <IconButton
+                                                    aria-label="edit"
+                                                    color="secondary"
+                                                    sx={{ padding: "5px" }}
+                                                >
+                                                    <i
+                                                        className="material-symbols-outlined"
+                                                        style={{ fontSize: "16px" }}
+                                                    >
+                                                        edit
+                                                    </i>
+                                                </IconButton>
+
+                                                <IconButton
+                                                    aria-label="delete"
+                                                    color="error"
+                                                    sx={{ padding: "5px" }}
+                                                >
+                                                    <i
+                                                        className="material-symbols-outlined"
+                                                        style={{ fontSize: "16px" }}
+                                                    >
+                                                        delete
+                                                    </i>
+                                                </IconButton>
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
 
                         <TableFooter>
@@ -361,7 +432,7 @@ const TableMembers = () => {
                                 <TablePagination
                                     rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
                                     colSpan={8}
-                                    count={users?.data?.length}
+                                    count={users?.data?.length || 0}
                                     rowsPerPage={rowsPerPage}
                                     page={page}
                                     slotProps={{
@@ -388,13 +459,14 @@ const TableMembers = () => {
             {/* Create Member Dialog */}
             <Dialog
                 open={openCreateDialog}
-                onClose={handleCloseCreateDialog}
-                maxWidth="sm"
+                onClose={loading ? undefined : handleCloseCreateDialog}
+                maxWidth="lg"
                 fullWidth
                 PaperProps={{
                     sx: {
                         borderRadius: "12px",
                         boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                        maxHeight: "90vh",
                     }
                 }}
             >
@@ -407,15 +479,29 @@ const TableMembers = () => {
                     Create New Member
                 </DialogTitle>
                 <DialogContent sx={{ pt: 3 }}>
-                    <CreateMemberForm
-                        formData={createFormData}
-                        onChange={handleCreateFormChange}
+                    <MemberForm
                         onSubmit={handleCreateMember}
                         onCancel={handleCloseCreateDialog}
-                        loading={false}
+                        loading={loading}
                     />
                 </DialogContent>
             </Dialog>
+
+            {/* Snackbar for notifications */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+            >
+                <Alert
+                    onClose={handleCloseSnackbar}
+                    severity={snackbar.severity}
+                    sx={{ width: '100%' }}
+                >
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </>
     );
 };

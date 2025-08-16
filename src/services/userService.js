@@ -1,4 +1,5 @@
 import { BaseService } from './baseService';
+import { apiHelpers } from '../helpers/axiosConfig';
 
 export class UserService extends BaseService {
     constructor() {
@@ -27,6 +28,15 @@ export class UserService extends BaseService {
     async changePassword(userId, passwordData) {
         try {
             const response = await this.patch(userId, { password: passwordData });
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async createUser(userData) {
+        try {
+            const response = await apiHelpers.post(`/users/create-member`, userData);
             return response;
         } catch (error) {
             throw error;
