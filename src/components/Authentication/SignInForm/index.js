@@ -88,14 +88,13 @@ const SignInForm = () => {
     <>
       <Box
         className="auth-main-wrapper sign-in-area"
-        // sx={{
-        //   py: { xs: "60px", md: "80px", lg: "100px", xl: "135px" },
-        // }}
+
         sx={{
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
           height: "100vh",
+
         }}
       >
         <Box
@@ -108,7 +107,9 @@ const SignInForm = () => {
           <Grid
             container
             alignItems="center"
+
             justifyContent="center"
+
             columnSpacing={{ xs: 1, sm: 2, md: 4, lg: 3 }}
           >
             <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 7 }}>
@@ -120,8 +121,13 @@ const SignInForm = () => {
                 <img
                   src="/images/sign-in.jpg"
                   alt="sign-in-image"
+
                   width={500}
                   height={500}
+
+                  width={646}
+                  height={804}
+
                   style={{
                     borderRadius: "24px",
                   }}
@@ -142,20 +148,25 @@ const SignInForm = () => {
                     mb: "23px",
                   }}
                 >
-                  Staff Club
-                  {/* <img
+
+                  <img
+
                     src="/images/logo-big.svg"
                     alt="logo"
                     width={142}
                     height={38}
-                  /> */}
-                  {/* <img
+
+                  />
+                  <img
+
                     src="/images/white-logo.svg"
                     className="d-none"
                     alt="logo"
                     width={142}
                     height={38}
-                  /> */}
+
+                  />
+
                 </Box>
 
                 <Box

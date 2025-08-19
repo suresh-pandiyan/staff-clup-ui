@@ -26,8 +26,10 @@ import {
 } from '@mui/material';
 import { Visibility, TrendingUp, Group, Close } from '@mui/icons-material';
 import { useUsers, useShares } from '../../hooks';
+
 import { Link } from 'react-router-dom';
 import TableSharesMembers from "../../components_v2/tables/TableSharesMembers";
+
 
 const AllUsersShares = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -38,6 +40,7 @@ const AllUsersShares = () => {
     const { data: shares, isLoading: sharesLoading, error: sharesError } = useShares();
 
     // Combine users with their shares data
+
 
 
     return (
@@ -56,7 +59,8 @@ const AllUsersShares = () => {
                 </ul>
             </div>
 
-                <TableSharesMembers />
+            <TableSharesMembers />
+
         </>
     );
 };

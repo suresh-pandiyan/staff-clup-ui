@@ -4,12 +4,14 @@ import { Box, Typography, CircularProgress } from "@mui/material";
 import { useAuth } from "../../hooks/useAuth";
 import { styled } from "@mui/material/styles";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
+
 import GroupsIcon from '@mui/icons-material/Groups';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import SavingsIcon from '@mui/icons-material/Savings';
 import EventIcon from '@mui/icons-material/Event';
 import HealthAndSafetyIcon from '@mui/icons-material/HealthAndSafety';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+
 import MuiAccordion from "@mui/material/Accordion";
 import MuiAccordionSummary, {
   accordionSummaryClasses,
@@ -98,7 +100,9 @@ const LeftSidebarMenu = ({ toggleActive }) => {
     >
       <Box className="left-sidebar-menu">
         <Box className="logo">
+
           <Link to="/dashboard">
+
             <img
               src="/images/logo-icon.svg"
               alt="logo-icon"
@@ -197,7 +201,11 @@ const LeftSidebarMenu = ({ toggleActive }) => {
                 "/members/"
               )}`}
             >
+
               <GroupsIcon color="primary" />
+
+
+              <i className="material-symbols-outlined">format_list_bulleted</i>
 
               <Typography component={"span"} className="title">
                 Members
@@ -210,7 +218,11 @@ const LeftSidebarMenu = ({ toggleActive }) => {
                 "/shares/"
               )}`}
             >
+
               <CurrencyExchangeIcon color="primary" />
+
+              <i className="material-symbols-outlined">format_list_bulleted</i>
+
               <Typography component={"span"} className="title">
                 Share
               </Typography>
@@ -220,7 +232,11 @@ const LeftSidebarMenu = ({ toggleActive }) => {
               to="/chitfunds/"
               className={`sidebar-menu-link ${isActiveLink("/chitfunds/")}`}
             >
+
               <SavingsIcon color="primary" />
+
+              <i className="material-symbols-outlined">date_range</i>
+
               <Typography component={"span"} className="title">
                 Chitfund
               </Typography>
@@ -230,7 +246,11 @@ const LeftSidebarMenu = ({ toggleActive }) => {
               to="/loans/"
               className={`sidebar-menu-link ${isActiveLink("/loans/")}`}
             >
+
               <AttachMoneyIcon color="primary" />
+
+              <i className="material-symbols-outlined">contact_page</i>
+
               <Typography component={"span"} className="title">
                 Loan
               </Typography>
@@ -240,7 +260,11 @@ const LeftSidebarMenu = ({ toggleActive }) => {
               to="/events/"
               className={`sidebar-menu-link ${isActiveLink("/events/")}`}
             >
+
               <EventIcon color="primary" />
+
+              <i className="material-symbols-outlined">chat</i>
+
               <Typography component={"span"} className="title">
                 Events
               </Typography>
@@ -250,7 +274,11 @@ const LeftSidebarMenu = ({ toggleActive }) => {
               to="/emergency-funds/"
               className={`sidebar-menu-link ${isActiveLink("/emergency-funds/")}`}
             >
+
               < HealthAndSafetyIcon color="primary" />
+
+              <i className="material-symbols-outlined">chat</i>
+
               <Typography component={"span"} className="title">
                 Emergency Fund
               </Typography>
