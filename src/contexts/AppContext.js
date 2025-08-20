@@ -72,7 +72,7 @@ export const AppProvider = ({ children }) => {
                 localStorage.removeItem('authToken');
                 setProfile(null);
                 setProfileLastFetched(null);
-                window.location.href = '/authentication/sign-in/';
+                window.location.href = '/login';
             }
             throw error;
         } finally {

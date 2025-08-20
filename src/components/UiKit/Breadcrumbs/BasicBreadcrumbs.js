@@ -37,7 +37,7 @@ const BasicBreadcrumbs = () => {
             <Link
               underline="hover"
               color="inherit"
-              href="/dashboard/ecommerce/"
+              href="/dashboard/"
             >
               MUI
             </Link>

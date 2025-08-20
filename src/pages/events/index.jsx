@@ -1,13 +1,14 @@
-import React from "react";  
-import { Link } from "react-router-dom"; 
-import CreateAnEventForm from "../../components/Events/CreateAnEventForm";
+import React from "react";
+import { Link } from "react-router-dom";
+import EventsGrid from "../../components/Events/EventsGrid";
+import TableEvents from "../../components_v2/tables/TableEvents";
 
-const CreateAnEvent = () => {
+const Events = () => {
   return (
     <>
       {/* Breadcrumb */}
       <div className="breadcrumb-card">
-        <h5>Create An Event</h5>
+        <h5>Events</h5>
 
         <ul className="breadcrumb">
           <li>
@@ -16,14 +17,13 @@ const CreateAnEvent = () => {
               Dashboard
             </Link>
           </li>
-          <li>Events</li> 
-          <li>Create An Event</li>
+          <li>Events</li>
+
         </ul>
       </div>
-
-      <CreateAnEventForm />
+      <TableEvents />
     </>
   );
 };
 
-export default CreateAnEvent;
+export default Events;

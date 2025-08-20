@@ -1,16 +1,16 @@
 import React from "react";
 import Grid from "@mui/material/Grid";
-import Welcome from "../../components/Dashboard/eCommerce/Welcome";
-import TotalSales from "../../components/Dashboard/eCommerce/TotalSales";
-import TotalOrders from "../../components/Dashboard/eCommerce/TotalOrders";
-import TotalCustomers from "../../components/Dashboard/eCommerce/TotalCustomers";
-import TotalRevenue from "../../components/Dashboard/eCommerce/TotalRevenue";
-import SalesByLocations from "../../components/Dashboard/eCommerce/SalesByLocations";
-import TopSellingProducts from "../../components/Dashboard/eCommerce/TopSellingProducts";
-import RecentOrders from "../../components/Dashboard/eCommerce/RecentOrders";
-import OrderSummary from "../../components/Dashboard/eCommerce/OrderSummary";
-import RecentTransactions from "../../components/Dashboard/eCommerce/RecentTransactions";
-import ReturningCustomerRate from "../../components/Dashboard/eCommerce/ReturningCustomerRate";
+import Welcome from "../../components/dashboard/Welcome";
+import TotalSales from "../../components/dashboard/TotalSales";
+import TotalOrders from "../../components/dashboard/TotalOrders";
+import TotalCustomers from "../../components/dashboard/TotalCustomers";
+import TotalRevenue from "../../components/dashboard/TotalRevenue";
+import SalesByLocations from "../../components/dashboard/SalesByLocations";
+import TopSellingProducts from "../../components/dashboard/TopSellingProducts";
+import RecentOrders from "../../components/dashboard/RecentOrders";
+import OrderSummary from "../../components/dashboard/OrderSummary";
+import RecentTransactions from "../../components/dashboard/RecentTransactions";
+import ReturningCustomerRate from "../../components/dashboard/ReturningCustomerRate";
 
 const Ecommerce = () => {
   return (

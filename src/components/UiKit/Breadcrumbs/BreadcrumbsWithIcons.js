@@ -41,7 +41,7 @@ const BreadcrumbsWithIcons = () => {
               underline="hover"
               sx={{ display: "flex", alignItems: "center" }}
               color="inherit"
-              href="/dashboard/ecommerce/"
+              href="/dashboard/"
             >
               <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
               MUI

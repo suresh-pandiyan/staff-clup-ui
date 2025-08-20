@@ -130,7 +130,7 @@ const ConfirmEmailForm = () => {
                     </Typography>
                   </Box>
 
-                  <Link to="/dashboard/ecommerce/">
+                  <Link to="/dashboard/">
                     <Button
                       type="submit"
                       variant="contained"

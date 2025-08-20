@@ -31,7 +31,7 @@ export const authService = {
     // Logout
     async logout() {
         try {
-            const response = await apiHelpers.post('/auth/logout');
+            const response = await apiHelpers.post('/logout');
             localStorage.removeItem('authToken');
             return handleApiSuccess(response);
         } catch (error) {

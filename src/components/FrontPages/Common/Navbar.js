@@ -105,7 +105,7 @@ const Navbar = () => {
               </li>
 
               <li className="nav-item">
-                <a href="/dashboard/ecommerce/" className="nav-link">
+                <a href="/dashboard/" className="nav-link">
                   Admin
                 </a>
               </li>

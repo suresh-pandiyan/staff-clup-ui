@@ -37,7 +37,7 @@ const NotFound = () => {
           </Typography>
 
           <Link 
-            href="/dashboard/ecommerce/"
+            href="/dashboard/"
             sx={{
               bgcolor: 'primary.main',
               textTransform: "capitalize",

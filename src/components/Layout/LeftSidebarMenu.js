@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import { useAuth } from "../../hooks/useAuth";
@@ -56,7 +56,7 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 }));
 
 const LeftSidebarMenu = ({ toggleActive }) => {
-  const [expanded, setExpanded] = useState("panel1");
+  const [expanded, setExpanded] = React.useState("panel1");
   const location = useLocation(); // Get current location/pathname
   const { logout, isLoading } = useAuth();
 
@@ -72,9 +72,9 @@ const LeftSidebarMenu = ({ toggleActive }) => {
   const isActiveLink = (path) => (location.pathname === path ? "active" : "");
 
   // Enable the dark sidebar exclusively for the /dashboard/beauty-salon/ page URL.
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     // Only check or set the theme if we're on the beauty-salon page.
     if (location.pathname === "/dashboard/beauty-salon/") {
       const storedTheme = localStorage.getItem("beautySalonSidebarTheme");
@@ -205,8 +205,7 @@ const LeftSidebarMenu = ({ toggleActive }) => {
               <GroupsIcon color="primary" />
 
 
-              <i className="material-symbols-outlined">format_list_bulleted</i>
-
+            
               <Typography component={"span"} className="title">
                 Members
               </Typography>
@@ -221,7 +220,7 @@ const LeftSidebarMenu = ({ toggleActive }) => {
 
               <CurrencyExchangeIcon color="primary" />
 
-              <i className="material-symbols-outlined">format_list_bulleted</i>
+             
 
               <Typography component={"span"} className="title">
                 Share
@@ -235,7 +234,7 @@ const LeftSidebarMenu = ({ toggleActive }) => {
 
               <SavingsIcon color="primary" />
 
-              <i className="material-symbols-outlined">date_range</i>
+             
 
               <Typography component={"span"} className="title">
                 Chitfund
@@ -249,7 +248,7 @@ const LeftSidebarMenu = ({ toggleActive }) => {
 
               <AttachMoneyIcon color="primary" />
 
-              <i className="material-symbols-outlined">contact_page</i>
+  
 
               <Typography component={"span"} className="title">
                 Loan
@@ -263,7 +262,7 @@ const LeftSidebarMenu = ({ toggleActive }) => {
 
               <EventIcon color="primary" />
 
-              <i className="material-symbols-outlined">chat</i>
+   
 
               <Typography component={"span"} className="title">
                 Events
@@ -277,7 +276,7 @@ const LeftSidebarMenu = ({ toggleActive }) => {
 
               < HealthAndSafetyIcon color="primary" />
 
-              <i className="material-symbols-outlined">chat</i>
+   
 
               <Typography component={"span"} className="title">
                 Emergency Fund
@@ -300,7 +299,7 @@ const LeftSidebarMenu = ({ toggleActive }) => {
               to="/my-profile/"
               className={`sidebar-menu-link ${isActiveLink("/my-profile/")}`}
             >
-              <i className="material-symbols-outlined">account_circle</i>
+     
               <Typography component={"span"} className="title">
                 My Profile
               </Typography>

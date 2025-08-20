@@ -42,7 +42,7 @@ const HeroBanner = () => {
               confidence.
             </p>
 
-            <Link to="/dashboard/ecommerce/" className="fp-banner-button">
+            <Link to="/dashboard/" className="fp-banner-button">
               <i className="material-symbols-outlined">person</i>
               Get started - It is free
             </Link>

@@ -12,7 +12,6 @@ export const useAuth = () => {
     const logout = async () => {
         setIsLoading(true);
         setError(null);
-
         try {
             // Call the logout API
             await authService.logout();
@@ -23,7 +22,7 @@ export const useAuth = () => {
             clearProfile(); // Clear profile from context
 
             // Redirect to login page
-            navigate('/authentication/sign-in/');
+            navigate('/login');
 
             return { success: true };
         } catch (error) {
@@ -33,7 +32,7 @@ export const useAuth = () => {
             localStorage.removeItem('authToken');
             sessionStorage.clear();
             clearProfile(); // Clear profile from context
-            navigate('/authentication/sign-in/');
+            navigate('/login');
 
             return { success: false, error: error.message };
         } finally {

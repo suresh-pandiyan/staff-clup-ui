@@ -61,7 +61,7 @@ const TopNavbar = ({ toggleActive }) => {
               }}
             >
               <Box className="logos">
-                <Link to="/dashboard/ecommerce/" className="logo">
+                <Link to="/dashboard/" className="logo">
                   <img
                     src="/images/logo.svg"
                     alt="logo"
@@ -70,7 +70,7 @@ const TopNavbar = ({ toggleActive }) => {
                   />
                 </Link>
 
-                <Link to="/dashboard/ecommerce/" className="white-logo">
+                <Link to="/dashboard/" className="white-logo">
                   <img
                     src="/images/white-logo.svg"
                     alt="logo"

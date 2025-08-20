@@ -121,13 +121,8 @@ const SignInForm = () => {
                 <img
                   src="/images/sign-in.jpg"
                   alt="sign-in-image"
-
                   width={500}
                   height={500}
-
-                  width={646}
-                  height={804}
-
                   style={{
                     borderRadius: "24px",
                   }}

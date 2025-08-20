@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { CircularProgress, Box } from '@mui/material';
 
-const ProtectedRoute = ({ children, redirectTo = '/authentication/sign-in/' }) => {
+const ProtectedRoute = ({ children, redirectTo = '/login' }) => {
     const { isAuthenticated, profile, fetchProfile, isLoading } = useApp();
     const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const location = useLocation();

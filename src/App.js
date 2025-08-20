@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import LeftSidebarMenu from "./components/Layout/LeftSidebarMenu";
 import TopNavbar from "./components/Layout/TopNavbar";
@@ -9,7 +9,6 @@ import ProtectedRoute from "./components/Layout/ProtectedRoute";
 import PublicRoute from "./components/Layout/PublicRoute";
 import { AppProvider } from "./contexts/AppContext";
 
-import Home from "./pages/Home";
 import Accounts from "./pages/accounts";
 import Shares from "./pages/shares";
 import Members from "./pages/members";
@@ -32,17 +31,9 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => {
-  const [active, setActive] = useState(false);
-  const [pathname, setPathname] = useState("");
-
-  useEffect(() => {
-    setPathname(window.location.pathname); // Get the current path
-  }, []);
-
-  const toggleActive = () => {
-    setActive(!active);
-  };
+const AppLayout = ({ active, toggleActive }) => {
+  const location = useLocation();
+  const pathname = location.pathname;
 
   // Define which pages should not show the navigation
   const isPublicPage = [
@@ -68,43 +59,56 @@ const App = () => {
   ].includes(pathname);
 
   return (
+    <>
+      <RouteChangeHandler />
+      {!isPublicPage && !isAuthPage && (
+        <>
+          <TopNavbar toggleActive={toggleActive} />
+          <LeftSidebarMenu toggleActive={toggleActive} />
+        </>
+      )}
+
+      <div className="main-content">
+        <ScrollToTop />
+
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+
+          {/* Protected Routes */}
+          <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
+          <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
+          <Route path="/shares" element={<ProtectedRoute><Shares /></ProtectedRoute>} />
+          <Route path="/chitfunds" element={<ProtectedRoute><ChitFunds /></ProtectedRoute>} />
+          <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
+          <Route path="/emergency-funds" element={<ProtectedRoute><EmergencyFunds /></ProtectedRoute>} />
+          <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+
+          {/* Dashboard Sub-routes */}
+          <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        </Routes>
+
+        {/* {!isAuthPage && <Footer />} */}
+      </div>
+    </>
+  );
+};
+
+const App = () => {
+  const [active, setActive] = React.useState(false);
+
+  const toggleActive = () => {
+    setActive(!active);
+  };
+
+  return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>
         <div className={`main-wrapper-content ${active ? "active" : ""}`}>
           <Router>
-            <RouteChangeHandler />
-            {!isPublicPage && !isAuthPage && (
-              <>
-                <TopNavbar toggleActive={toggleActive} />
-
-                <LeftSidebarMenu toggleActive={toggleActive} />
-              </>
-            )}
-
-            <div className="main-content">
-              <ScrollToTop />
-
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-
-                {/* Protected Routes */}
-                <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
-                <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
-                <Route path="/shares" element={<ProtectedRoute><Shares /></ProtectedRoute>} />
-                <Route path="/chitfunds" element={<ProtectedRoute><ChitFunds /></ProtectedRoute>} />
-                <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
-                <Route path="/emergency-funds" element={<ProtectedRoute><EmergencyFunds /></ProtectedRoute>} />
-                <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-
-                {/* Dashboard Sub-routes */}
-                <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              </Routes>
-
-              {/* {!isAuthPage && <Footer />} */}
-            </div>
+            <AppLayout active={active} toggleActive={toggleActive} />
           </Router>
         </div>
       </AppProvider>

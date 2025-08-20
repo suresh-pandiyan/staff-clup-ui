@@ -36,7 +36,7 @@ const Cta = () => {
               your data analysis process.
             </p>
 
-            <Link to="/dashboard/ecommerce/" className="cta-button">
+            <Link to="/dashboard/" className="cta-button">
               <i className="material-symbols-outlined">person</i>
               Get started - It is free
             </Link>

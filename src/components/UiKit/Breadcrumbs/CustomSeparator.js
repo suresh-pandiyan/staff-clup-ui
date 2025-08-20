@@ -15,7 +15,7 @@ const CustomSeparator = () => {
       underline="hover"
       key="1"
       color="inherit"
-      href="/dashboard/ecommerce/"
+      href="/dashboard/"
       onClick={handleClick}
     >
       MUI

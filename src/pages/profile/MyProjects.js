@@ -13,7 +13,7 @@ const MyProjects = () => {
 
         <ul className="breadcrumb">
           <li>
-            <Link to="/dashboard/ecommerce/">
+            <Link to="/dashboard/">
               <i className="material-symbols-outlined">home</i>
               Dashboard
             </Link>
