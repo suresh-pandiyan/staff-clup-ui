@@ -21,13 +21,15 @@ import {
     DialogContent,
     Alert,
     Snackbar,
+    Chip,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
-import { useUsers } from "../../hooks/useUsers";
-import MemberForm from "../forms/MemberForm";
-import { userService } from "../../services/userService";
+import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent } from "../../hooks/useEvents";
+import EventForm from "../forms/EventForm";
+import EventPaymentModal from "../modals/EventPaymentModal";
+import { eventService } from "../../services/eventService";
 
 function TablePaginationActions(props) {
     const theme = useTheme();
@@ -92,19 +94,19 @@ const TableEvents = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState("");
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [openEditDialog, setOpenEditDialog] = useState(false);
+    const [openPaymentModal, setOpenPaymentModal] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState(null);
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
         severity: 'success'
     });
 
-    const { data: users, refetch, isLoading: usersLoading, error: usersError } = useUsers();
-
-    // Debug logging to understand data structure
-    console.log('useUsers hook result:', { users, usersLoading, usersError });
-    console.log('users type:', typeof users);
-    console.log('users is array:', Array.isArray(users));
+    const { data: events, refetch, isLoading: eventsLoading, error: eventsError } = useEvents();
+    const createEventMutation = useCreateEvent();
+    const updateEventMutation = useUpdateEvent();
+    const deleteEventMutation = useDeleteEvent();
 
 
     const handleChangePage = (event, newPage) => {
@@ -128,72 +130,115 @@ const TableEvents = () => {
         setOpenCreateDialog(false);
     };
 
-    const handleCreateMember = async (formData) => {
-        console.log('Form data received:', formData);
+    const handleOpenEditDialog = (event) => {
+        setSelectedEvent(event);
+        setOpenEditDialog(true);
+    };
 
+    const handleCloseEditDialog = () => {
+        setOpenEditDialog(false);
+        setSelectedEvent(null);
+    };
+
+    const handleOpenPaymentModal = (event) => {
+        setSelectedEvent(event);
+        setOpenPaymentModal(true);
+    };
+
+    const handleClosePaymentModal = () => {
+        setOpenPaymentModal(false);
+        setSelectedEvent(null);
+    };
+
+    const handleCreateEvent = async (formData) => {
         try {
-            setLoading(true);
-
-            // Format the data to match the API expectations
-            const userData = {
-                ...formData,
-                // Ensure joinDate is properly formatted
-                joinDate: formData.joinDate ? new Date(formData.joinDate).toISOString() : new Date().toISOString(),
-                // Set default values for required fields
-                isActive: true,
-                emailVerified: false,
-                lastLogin: new Date().toISOString(),
-            };
-
-            console.log('Formatted user data:', userData);
-
-            // Call the userService to create the user
-            const response = await userService.createUser(userData);
-            console.log('API response:', response);
-
-            // Show success message
+            await createEventMutation.mutateAsync(formData);
+            
             setSnackbar({
                 open: true,
-                message: 'Member created successfully!',
+                message: 'Event created successfully!',
                 severity: 'success'
             });
 
-            // Close dialog and refresh the users list
             handleCloseCreateDialog();
             refetch();
-
         } catch (error) {
-            console.error('Error creating member:', error);
-            console.error('Error details:', {
-                message: error.message,
-                response: error.response,
-                status: error.status,
-                data: error.data
-            });
-
-            // Show error message
-            let errorMessage = 'Failed to create member. Please try again.';
-
-            if (error.response?.data?.message) {
-                errorMessage = error.response.data.message;
-            } else if (error.data?.message) {
-                errorMessage = error.data.message;
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-
+            console.error('Error creating event:', error);
             setSnackbar({
                 open: true,
-                message: errorMessage,
+                message: error.message || 'Failed to create event. Please try again.',
                 severity: 'error'
             });
-        } finally {
-            setLoading(false);
+        }
+    };
+
+    const handleUpdateEvent = async (formData) => {
+        try {
+            await updateEventMutation.mutateAsync({ id: selectedEvent.id, ...formData });
+            
+            setSnackbar({
+                open: true,
+                message: 'Event updated successfully!',
+                severity: 'success'
+            });
+
+            handleCloseEditDialog();
+            refetch();
+        } catch (error) {
+            console.error('Error updating event:', error);
+            setSnackbar({
+                open: true,
+                message: error.message || 'Failed to update event. Please try again.',
+                severity: 'error'
+            });
+        }
+    };
+
+    const handleDeleteEvent = async (eventId) => {
+        if (window.confirm('Are you sure you want to delete this event?')) {
+            try {
+                await deleteEventMutation.mutateAsync(eventId);
+                
+                setSnackbar({
+                    open: true,
+                    message: 'Event deleted successfully!',
+                    severity: 'success'
+                });
+
+                refetch();
+            } catch (error) {
+                console.error('Error deleting event:', error);
+                setSnackbar({
+                    open: true,
+                    message: error.message || 'Failed to delete event. Please try again.',
+                    severity: 'error'
+                });
+            }
         }
     };
 
     const handleCloseSnackbar = () => {
         setSnackbar(prev => ({ ...prev, open: false }));
+    };
+
+    const getStatusColor = (status) => {
+        switch (status) {
+            case 'upcoming': return 'primary';
+            case 'ongoing': return 'warning';
+            case 'completed': return 'success';
+            case 'cancelled': return 'error';
+            default: return 'default';
+        }
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('en-IN', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
     return (
@@ -237,7 +282,7 @@ const TableEvents = () => {
                         }}
                         startIcon={<i className="material-symbols-outlined" style={{ fontSize: "20px" }}>add</i>}
                     >
-                        Create Events
+                        Create Event
                     </Button>
                 </Box>
 
@@ -261,7 +306,6 @@ const TableEvents = () => {
                                     },
                                 }}
                             >
-
                                 <TableCell className="text-black border-bottom">
                                     Event Name
                                 </TableCell>
@@ -278,37 +322,40 @@ const TableEvents = () => {
                                     Event Location
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
-                                    Event Created
+                                    Status
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
-                                    Event Closed
+                                    Created
+                                </TableCell>
+                                <TableCell className="text-black border-bottom">
+                                    Actions
                                 </TableCell>
                             </TableRow>
                         </TableHead>
 
                         <TableBody>
-                            {usersLoading ? (
+                            {eventsLoading ? (
                                 <TableRow>
                                     <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                                        <Typography>Loading users...</Typography>
+                                        <Typography>Loading events...</Typography>
                                     </TableCell>
                                 </TableRow>
-                            ) : usersError ? (
+                            ) : eventsError ? (
                                 <TableRow>
                                     <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
                                         <Typography color="error">
-                                            Error loading users: {usersError.message}
+                                            Error loading events: {eventsError.message}
                                         </Typography>
                                     </TableCell>
                                 </TableRow>
-                            ) : !users || users.length === 0 ? (
+                            ) : !events || events.data?.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                                        <Typography>No users found</Typography>
+                                        <Typography>No events found</Typography>
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                users && users.data.map((row) => (
+                                events && events.data.map((row) => (
                                     <TableRow
                                         key={row.id}
                                         sx={{
@@ -318,54 +365,63 @@ const TableEvents = () => {
                                             },
                                         }}
                                     >
-                                        <TableCell className="border-bottom">{row.employeeId}</TableCell>
-
-                                        <TableCell className="text-black border-bottom">
-                                            <Box
+                                        <TableCell className="border-bottom">
+                                            <Typography
                                                 sx={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "12px",
+                                                    fontSize: "15px",
+                                                    fontWeight: "500",
+                                                }}
+                                                className="text-black"
+                                            >
+                                                {row.eventName}
+                                            </Typography>
+                                        </TableCell>
+
+                                        <TableCell className="border-bottom">
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "14px",
+                                                    color: "text.secondary",
+                                                    maxWidth: "200px",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
                                                 }}
                                             >
-                                                <Box sx={{ flexShrink: "0" }}>
-                                                    <img
-                                                        src={row.avatar}
-                                                        alt="."
-                                                        width={40}
-                                                        height={40}
-                                                        style={{ borderRadius: "100px" }}
-                                                    />
-                                                </Box>
-
-                                                <Box>
-                                                    <Typography
-                                                        sx={{
-                                                            fontSize: "15px",
-                                                            fontWeight: "500",
-                                                        }}
-                                                        className="text-black"
-                                                    >
-                                                        {row.firstName} {row.lastName}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </TableCell>
-
-                                        <TableCell className="border-bottom">{row.phone}</TableCell>
-
-                                        <TableCell className="border-bottom">{row.designation}</TableCell>
-
-                                        <TableCell className="border-bottom">
-                                            {row.joinDate}
+                                                {row.eventDescription}
+                                            </Typography>
                                         </TableCell>
 
                                         <TableCell className="border-bottom">
-                                            {row.hasLoan ? "Yes" : "No"}
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "15px",
+                                                    fontWeight: "500",
+                                                    color: "primary.main",
+                                                }}
+                                            >
+                                                ₹{row.eventAmount}
+                                            </Typography>
                                         </TableCell>
 
                                         <TableCell className="border-bottom">
-                                            {row.hasChitfund ? "Yes" : "No"}
+                                            {formatDate(row.eventTime)}
+                                        </TableCell>
+
+                                        <TableCell className="border-bottom">
+                                            {row.eventLocation}
+                                        </TableCell>
+
+                                        <TableCell className="border-bottom">
+                                            <Chip
+                                                label={row.eventStatus}
+                                                color={getStatusColor(row.eventStatus)}
+                                                size="small"
+                                            />
+                                        </TableCell>
+
+                                        <TableCell className="border-bottom">
+                                            {formatDate(row.createdAt)}
                                         </TableCell>
 
                                         <TableCell className="border-bottom">
@@ -373,18 +429,21 @@ const TableEvents = () => {
                                                 sx={{
                                                     display: "flex",
                                                     alignItems: "center",
+                                                    gap: 1,
                                                 }}
                                             >
                                                 <IconButton
-                                                    aria-label="view"
+                                                    aria-label="payments"
                                                     color="primary"
                                                     sx={{ padding: "5px" }}
+                                                    onClick={() => handleOpenPaymentModal(row)}
+                                                    title="Manage Payments"
                                                 >
                                                     <i
                                                         className="material-symbols-outlined"
                                                         style={{ fontSize: "16px" }}
                                                     >
-                                                        visibility
+                                                        payments
                                                     </i>
                                                 </IconButton>
 
@@ -392,6 +451,8 @@ const TableEvents = () => {
                                                     aria-label="edit"
                                                     color="secondary"
                                                     sx={{ padding: "5px" }}
+                                                    onClick={() => handleOpenEditDialog(row)}
+                                                    title="Edit Event"
                                                 >
                                                     <i
                                                         className="material-symbols-outlined"
@@ -405,6 +466,8 @@ const TableEvents = () => {
                                                     aria-label="delete"
                                                     color="error"
                                                     sx={{ padding: "5px" }}
+                                                    onClick={() => handleDeleteEvent(row.id)}
+                                                    title="Delete Event"
                                                 >
                                                     <i
                                                         className="material-symbols-outlined"
@@ -425,7 +488,7 @@ const TableEvents = () => {
                                 <TablePagination
                                     rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
                                     colSpan={8}
-                                    count={users?.data?.length || 0}
+                                    count={events?.data?.length || 0}
                                     rowsPerPage={rowsPerPage}
                                     page={page}
                                     slotProps={{
@@ -449,10 +512,10 @@ const TableEvents = () => {
                 </TableContainer>
             </Card>
 
-            {/* Create Member Dialog */}
+            {/* Create Event Dialog */}
             <Dialog
                 open={openCreateDialog}
-                onClose={loading ? undefined : handleCloseCreateDialog}
+                onClose={createEventMutation.isPending ? undefined : handleCloseCreateDialog}
                 maxWidth="lg"
                 fullWidth
                 PaperProps={{
@@ -469,16 +532,55 @@ const TableEvents = () => {
                     fontSize: "20px",
                     fontWeight: 600
                 }}>
-                    Create New Events
+                    Create New Event
                 </DialogTitle>
                 <DialogContent sx={{ pt: 3 }}>
-                    <MemberForm
-                        onSubmit={handleCreateMember}
+                    <EventForm
+                        onSubmit={handleCreateEvent}
                         onCancel={handleCloseCreateDialog}
-                        loading={loading}
+                        loading={createEventMutation.isPending}
                     />
                 </DialogContent>
             </Dialog>
+
+            {/* Edit Event Dialog */}
+            <Dialog
+                open={openEditDialog}
+                onClose={updateEventMutation.isPending ? undefined : handleCloseEditDialog}
+                maxWidth="lg"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                        maxHeight: "90vh",
+                    }
+                }}
+            >
+                <DialogTitle sx={{
+                    pb: 1,
+                    borderBottom: "1px solid #e0e0e0",
+                    fontSize: "20px",
+                    fontWeight: 600
+                }}>
+                    Edit Event
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3 }}>
+                    <EventForm
+                        onSubmit={handleUpdateEvent}
+                        onCancel={handleCloseEditDialog}
+                        loading={updateEventMutation.isPending}
+                        initialData={selectedEvent}
+                    />
+                </DialogContent>
+            </Dialog>
+
+            {/* Event Payment Modal */}
+            <EventPaymentModal
+                open={openPaymentModal}
+                onClose={handleClosePaymentModal}
+                event={selectedEvent}
+            />
 
             {/* Snackbar for notifications */}
             <Snackbar
