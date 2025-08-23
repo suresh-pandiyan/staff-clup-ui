@@ -259,7 +259,7 @@ import More from "./pages/charts/More";
 
 // Authentication
 import SignIn from "./pages/authentication/SignIn";
-import SignUp from "./pages/authentication/SignUp";
+
 import ForgotPassword from "./pages/authentication/ForgotPassword";
 import ResetPassword from "./pages/authentication/ResetPassword";
 import ConfirmEmail from "./pages/authentication/ConfirmEmail";
@@ -736,7 +736,7 @@ const App = () => {
 
                             {/* Authentication */}
                             <Route path="/authentication/sign-in/" element={<SignIn />} />
-                            <Route path="/authentication/sign-up/" element={<SignUp />} />
+                           
                             <Route
                                 path="/authentication/forgot-password/"
                                 element={<ForgotPassword />}

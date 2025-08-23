@@ -144,15 +144,15 @@ const SignInForm = () => {
                   }}
                 >
 
-                  <img
+                  {/* <img
 
                     src="/images/logo-big.svg"
                     alt="logo"
                     width={142}
                     height={38}
 
-                  />
-                  <img
+                  /> */}
+                  {/* <img
 
                     src="/images/white-logo.svg"
                     className="d-none"
@@ -160,7 +160,7 @@ const SignInForm = () => {
                     width={142}
                     height={38}
 
-                  />
+                  /> */}
 
                 </Box>
 
@@ -343,22 +343,6 @@ const SignInForm = () => {
                         </>
                       )}
                     </Button>
-                  </Box>
-
-                  <Box textAlign="center">
-                    <Typography variant="body2" sx={{ color: "#6B7280" }}>
-                      Don't have an account?{" "}
-                      <Link
-                        to="/authentication/sign-up/"
-                        className="text-primary"
-                        style={{
-                          fontWeight: "500",
-                          textDecoration: "none",
-                        }}
-                      >
-                        Sign up here
-                      </Link>
-                    </Typography>
                   </Box>
                 </Box>
               </Box>
