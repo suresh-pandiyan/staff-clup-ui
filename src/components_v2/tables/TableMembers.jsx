@@ -92,6 +92,8 @@ const TableMembers = () => {
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState("");
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
+    const [openEditDialog, setOpenEditDialog] = useState(false);
+    const [editingMember, setEditingMember] = useState(null);
     const [loading, setLoading] = useState(false);
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -100,11 +102,6 @@ const TableMembers = () => {
     });
 
     const { data: users, refetch, isLoading: usersLoading, error: usersError } = useUsers();
-
-    // Debug logging to understand data structure
-    console.log('useUsers hook result:', { users, usersLoading, usersError });
-    console.log('users type:', typeof users);
-    console.log('users is array:', Array.isArray(users));
 
 
     const handleChangePage = (event, newPage) => {
@@ -126,6 +123,22 @@ const TableMembers = () => {
 
     const handleCloseCreateDialog = () => {
         setOpenCreateDialog(false);
+    };
+
+    const handleOpenEditDialog = (member) => {
+        // Format the member data for the form
+        const formattedMember = {
+            ...member,
+            // Format joinDate for the date input field (YYYY-MM-DD)
+            joinDate: member.joinDate ? new Date(member.joinDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        };
+        setEditingMember(formattedMember);
+        setOpenEditDialog(true);
+    };
+
+    const handleCloseEditDialog = () => {
+        setOpenEditDialog(false);
+        setEditingMember(null);
     };
 
     const handleCreateMember = async (formData) => {
@@ -189,6 +202,114 @@ const TableMembers = () => {
             });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleUpdateMember = async (formData) => {
+        console.log('Update form data received:', formData);
+
+        try {
+            setLoading(true);
+
+            // Format the data to match the API expectations
+            const userData = {
+                ...formData,
+                // Ensure joinDate is properly formatted
+                joinDate: formData.joinDate ? new Date(formData.joinDate).toISOString() : editingMember.joinDate,
+                // Keep existing values for fields not in the form
+                isActive: editingMember.isActive,
+                emailVerified: editingMember.emailVerified,
+                lastLogin: editingMember.lastLogin,
+            };
+
+            console.log('Formatted update user data:', userData);
+
+            // Call the userService to update the user
+            const response = await userService.updateUser(editingMember.id, userData);
+            console.log('Update API response:', response);
+
+            // Show success message
+            setSnackbar({
+                open: true,
+                message: 'Member updated successfully!',
+                severity: 'success'
+            });
+
+            // Close dialog and refresh the users list
+            handleCloseEditDialog();
+            refetch();
+
+        } catch (error) {
+            console.error('Error updating member:', error);
+            console.error('Error details:', {
+                message: error.message,
+                response: error.response,
+                status: error.status,
+                data: error.data
+            });
+
+            // Show error message
+            let errorMessage = 'Failed to update member. Please try again.';
+
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.data?.message) {
+                errorMessage = error.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            setSnackbar({
+                open: true,
+                message: errorMessage,
+                severity: 'error'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDeleteMember = async (memberId) => {
+        if (window.confirm('Are you sure you want to delete this member? This action cannot be undone.')) {
+            try {
+                setLoading(true);
+
+                // Call the userService to delete the user
+                const response = await userService.delete(memberId);
+                console.log('Delete API response:', response);
+
+                // Show success message
+                setSnackbar({
+                    open: true,
+                    message: 'Member deleted successfully!',
+                    severity: 'success'
+                });
+
+                // Refresh the users list
+                refetch();
+
+            } catch (error) {
+                console.error('Error deleting member:', error);
+
+                // Show error message
+                let errorMessage = 'Failed to delete member. Please try again.';
+
+                if (error.response?.data?.message) {
+                    errorMessage = error.response.data.message;
+                } else if (error.data?.message) {
+                    errorMessage = error.data.message;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+
+                setSnackbar({
+                    open: true,
+                    message: errorMessage,
+                    severity: 'error'
+                });
+            } finally {
+                setLoading(false);
+            }
         }
     };
 
@@ -383,22 +504,10 @@ const TableMembers = () => {
                                                 }}
                                             >
                                                 <IconButton
-                                                    aria-label="view"
-                                                    color="primary"
-                                                    sx={{ padding: "5px" }}
-                                                >
-                                                    <i
-                                                        className="material-symbols-outlined"
-                                                        style={{ fontSize: "16px" }}
-                                                    >
-                                                        visibility
-                                                    </i>
-                                                </IconButton>
-
-                                                <IconButton
                                                     aria-label="edit"
                                                     color="secondary"
                                                     sx={{ padding: "5px" }}
+                                                    onClick={() => handleOpenEditDialog(row)}
                                                 >
                                                     <i
                                                         className="material-symbols-outlined"
@@ -412,6 +521,7 @@ const TableMembers = () => {
                                                     aria-label="delete"
                                                     color="error"
                                                     sx={{ padding: "5px" }}
+                                                    onClick={() => handleDeleteMember(row.id)}
                                                 >
                                                     <i
                                                         className="material-symbols-outlined"
@@ -483,6 +593,39 @@ const TableMembers = () => {
                         onSubmit={handleCreateMember}
                         onCancel={handleCloseCreateDialog}
                         loading={loading}
+                    />
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit Member Dialog */}
+            <Dialog
+                open={openEditDialog}
+                onClose={loading ? undefined : handleCloseEditDialog}
+                maxWidth="lg"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                        maxHeight: "90vh",
+                    }
+                }}
+            >
+                <DialogTitle sx={{
+                    pb: 1,
+                    borderBottom: "1px solid #e0e0e0",
+                    fontSize: "20px",
+                    fontWeight: 600
+                }}>
+                    Edit Member
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3 }}>
+                    <MemberForm
+                        onSubmit={handleUpdateMember}
+                        onCancel={handleCloseEditDialog}
+                        loading={loading}
+                        isEdit={true}
+                        defaultValues={editingMember}
                     />
                 </DialogContent>
             </Dialog>

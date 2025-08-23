@@ -13,11 +13,14 @@ import {
     Typography,
     FormHelperText,
     Divider,
+    Checkbox,
+    FormControlLabel,
 } from '@mui/material';
 
 // Validation schema
 const memberSchema = yup.object({
     // Employee Information
+    isEdit: yup.boolean(),
     employeeId: yup
         .string()
         .required('Employee ID is required')
@@ -38,6 +41,12 @@ const memberSchema = yup.object({
         .string()
         .required('Phone number is required')
         .matches(/^[\+]?[1-9][\d]{0,15}$/, 'Please add a valid phone number'),
+    joinDate: yup
+        .string()
+        .required('Join date is required'),
+    role: yup
+        .string()
+        .oneOf(['user', 'admin', 'moderator', 'manager', 'supervisor'], 'Please select a valid role'),
     type: yup
         .string()
         .oneOf(['full-time', 'part-time', 'contract', 'intern'], 'Please select a valid type'),
@@ -81,6 +90,22 @@ const memberSchema = yup.object({
         .required('Current salary is required')
         .min(0, 'Salary cannot be negative'),
 
+    password: yup
+        .string()
+        .when('isEdit', {
+            is: false,
+            then: (schema) => schema.required('Password is required').min(6, 'Password must be at least 6 characters'),
+            otherwise: (schema) => schema.optional(),
+        }),
+
+    confirmPassword: yup
+        .string()
+        .when('isEdit', {
+            is: false,
+            then: (schema) => schema.required('Please confirm your password').oneOf([yup.ref('password')], 'Passwords must match'),
+            otherwise: (schema) => schema.optional(),
+        }),
+
     // Emergency Contact
     emergencyContact: yup.object({
         name: yup.string().required('Emergency contact name is required'),
@@ -109,7 +134,7 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
             phone: '',
             role: 'user',
             type: 'full-time',
-            joinDate: '',
+            joinDate: new Date().toISOString().split('T')[0], // Default to today's date
             address: {
                 street: '',
                 city: '',
@@ -130,6 +155,8 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                 address: '',
             },
             password: 'admin@123',
+            confirmPassword: 'admin@123',
+            isEdit: isEdit,
             ...defaultValues,
         },
     });
@@ -293,7 +320,7 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                     </FormControl>
                 </Grid>
 
-                {/* <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
+                <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
                     <FormControl fullWidth error={!!errors.joinDate}>
                         <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
                             Join Date *
@@ -315,9 +342,9 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                         />
                         {errors.joinDate && <FormHelperText error>{errors.joinDate.message}</FormHelperText>}
                     </FormControl>
-                </Grid> */}
+                </Grid>
 
-                {/* <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
+                <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
                     <FormControl fullWidth error={!!errors.role}>
                         <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
                             Role *
@@ -337,7 +364,7 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                         />
                         {errors.role && <FormHelperText error>{errors.role.message}</FormHelperText>}
                     </FormControl>
-                </Grid> */}
+                </Grid>
 
                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
                     <FormControl fullWidth error={!!errors.type}>
@@ -410,7 +437,7 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                     </FormControl>
                 </Grid>
 
-                {/* <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
+                <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
                     <FormControl fullWidth error={!!errors.status}>
                         <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
                             Status *
@@ -430,7 +457,7 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                         />
                         {errors.status && <FormHelperText error>{errors.status.message}</FormHelperText>}
                     </FormControl>
-                </Grid> */}
+                </Grid>
 
                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
                     <FormControl fullWidth error={!!errors.currentSalary}>
@@ -455,7 +482,7 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                     </FormControl>
                 </Grid>
 
-                {/* <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
+                <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
                     <FormControl fullWidth>
                         <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
                             Has Loan
@@ -471,9 +498,9 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                             )}
                         />
                     </FormControl>
-                </Grid> */}
+                </Grid>
 
-                {/* <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
+                <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 6 }}>
                     <FormControl fullWidth>
                         <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
                             Has Chit Fund
@@ -489,7 +516,7 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                             )}
                         />
                     </FormControl>
-                </Grid> */}
+                </Grid>
 
                 {/* Address Section */}
                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
@@ -706,7 +733,7 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                 </Grid>
 
                 {/* Password Section - Only show for new users */}
-                {/* {!isEdit && (
+                {!isEdit && (
                     <>
                         <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                             <Divider sx={{ my: 3 }} />
@@ -761,7 +788,7 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
                             </FormControl>
                         </Grid>
                     </>
-                )} */}
+                )}
 
                 {/* Submit Buttons */}
                 <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>

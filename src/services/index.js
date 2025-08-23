@@ -8,4 +8,5 @@ export { loanService } from './loanService';
 export { emergencyFundService } from './emergencyFundService';
 export { authService } from './authService';
 export { fileService } from './fileService';
-export { dashboardService } from './dashboardService'; 
+export { dashboardService } from './dashboardService';
+export { financialYearService } from './financialYearService';

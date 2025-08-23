@@ -26,7 +26,7 @@ import { useTheme } from "@mui/material/styles";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import { useUsers } from "../../hooks/useUsers";
-import MemberForm from "../forms/MemberForm";
+import ShareForm from "../forms/ShareForm";
 import { userService } from "../../services/userService";
 
 function TablePaginationActions(props) {
@@ -128,51 +128,41 @@ const TableSharesMembers = () => {
         setOpenCreateDialog(false);
     };
 
-    const handleCreateMember = async (formData) => {
-        console.log('Form data received:', formData);
+    const handleUpdateShareDates = async (formData) => {
+        console.log('Share dates form data received:', formData);
 
         try {
             setLoading(true);
 
-            // Format the data to match the API expectations
-            const userData = {
-                ...formData,
-                // Ensure joinDate is properly formatted
-                joinDate: formData.joinDate ? new Date(formData.joinDate).toISOString() : new Date().toISOString(),
-                // Set default values for required fields
-                isActive: true,
-                emailVerified: false,
-                lastLogin: new Date().toISOString(),
+            // Process the share dates data
+            const shareDatesData = {
+                year: formData.year,
+                months: formData.months,
+                updatedAt: new Date().toISOString(),
+                status: 'active'
             };
 
-            console.log('Formatted user data:', userData);
+            console.log('Processed share dates data:', shareDatesData);
 
-            // Call the userService to create the user
-            const response = await userService.createUser(userData);
-            console.log('API response:', response);
+            // TODO: Call the shares service to update the share dates
+            // const response = await sharesService.updateDates(shareDatesData);
+            console.log('Share dates would be updated with:', shareDatesData);
 
             // Show success message
             setSnackbar({
                 open: true,
-                message: 'Member created successfully!',
+                message: 'Monthly share dates updated successfully!',
                 severity: 'success'
             });
 
-            // Close dialog and refresh the users list
+            // Close dialog
             handleCloseCreateDialog();
-            refetch();
 
         } catch (error) {
-            console.error('Error creating member:', error);
-            console.error('Error details:', {
-                message: error.message,
-                response: error.response,
-                status: error.status,
-                data: error.data
-            });
+            console.error('Error updating share dates:', error);
 
             // Show error message
-            let errorMessage = 'Failed to create member. Please try again.';
+            let errorMessage = 'Failed to update share dates. Please try again.';
 
             if (error.response?.data?.message) {
                 errorMessage = error.response.data.message;
@@ -235,9 +225,9 @@ const TableSharesMembers = () => {
                                 backgroundColor: "#1565c0",
                             },
                         }}
-                        startIcon={<i className="material-symbols-outlined" style={{ fontSize: "20px" }}>add</i>}
+                        startIcon={<i className="material-symbols-outlined" style={{ fontSize: "20px" }}>calendar_today</i>}
                     >
-                        Create Shares
+                        Update Share Dates
                     </Button>
                 </Box>
 
@@ -489,11 +479,11 @@ const TableSharesMembers = () => {
                     fontSize: "20px",
                     fontWeight: 600
                 }}>
-                    Create New Shares
+                    Update Monthly Share Dates
                 </DialogTitle>
                 <DialogContent sx={{ pt: 3 }}>
-                    <MemberForm
-                        onSubmit={handleCreateMember}
+                    <ShareForm
+                        onSubmit={handleUpdateShareDates}
                         onCancel={handleCloseCreateDialog}
                         loading={loading}
                     />
