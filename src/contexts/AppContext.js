@@ -5,6 +5,7 @@ const AppContext = createContext();
 
 export const useApp = () => {
     const context = useContext(AppContext);
+
     if (!context) {
         throw new Error('useApp must be used within an AppProvider');
     }
@@ -17,7 +18,8 @@ export const AppProvider = ({ children }) => {
     const [error, setError] = useState(null);
     const [isInitialized, setIsInitialized] = useState(false);
     const [profileLastFetched, setProfileLastFetched] = useState(null);
-
+    
+    const [selectedFinancialYear, setSelectedFinancialYear] = useState(null);
     // Initialize authentication state on mount
     useEffect(() => {
         const initializeAuth = async () => {
@@ -107,6 +109,10 @@ export const AppProvider = ({ children }) => {
         updateProfile,
         clearProfile,
         isAuthenticated,
+
+        // FinancialYear
+        selectedFinancialYear,
+        setSelectedFinancialYear,
     };
 
     return (

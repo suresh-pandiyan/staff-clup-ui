@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-console.log("API URL", process.env.REACT_APP_API_URL);
+// console.log("API URL", process.env.REACT_APP_API_URL);
 
 // Create axios instance with default config
 const api = axios.create({
@@ -28,7 +28,7 @@ api.interceptors.request.use(
             _t: Date.now(),
         };
 
-        console.log('Request:', config.method?.toUpperCase(), config.url);
+        //    console.log('Request:', config.method?.toUpperCase(), config.url);
         return config;
     },
     (error) => {
@@ -40,7 +40,7 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
     (response) => {
-        console.log('Response:', response.status, response.config.url);
+        //console.log('Response:', response.status, response.config.url);
         return response?.data;
     },
     (error) => {

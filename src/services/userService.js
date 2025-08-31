@@ -42,6 +42,15 @@ export class UserService extends BaseService {
             throw error;
         }
     }
+
+    async updateUser(userId, userData) {
+        try {
+            const response = await apiHelpers.put(`/users/update-member/${userId}`, userData);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export const userService = new UserService(); 

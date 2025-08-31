@@ -27,9 +27,10 @@ import { useTheme } from "@mui/material/styles";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent } from "../../hooks/useEvents";
+import { Link } from 'react-router-dom';
 import EventForm from "../forms/EventForm";
-import EventPaymentModal from "../modals/EventPaymentModal";
-import { eventService } from "../../services/eventService";
+import { useApp } from "../../contexts/AppContext";
+
 
 function TablePaginationActions(props) {
     const theme = useTheme();
@@ -95,19 +96,18 @@ const TableEvents = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
     const [openEditDialog, setOpenEditDialog] = useState(false);
-    const [openPaymentModal, setOpenPaymentModal] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [editingEvent, setEditingEvent] = useState(null);
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
         severity: 'success'
     });
-
-    const { data: events, refetch, isLoading: eventsLoading, error: eventsError } = useEvents();
+    const { selectedFinancialYear } = useApp();
+    const { data: events, refetch, isLoading: eventsLoading, error: eventsError } = useEvents(selectedFinancialYear?.id);
     const createEventMutation = useCreateEvent();
     const updateEventMutation = useUpdateEvent();
     const deleteEventMutation = useDeleteEvent();
-
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -131,35 +131,56 @@ const TableEvents = () => {
     };
 
     const handleOpenEditDialog = (event) => {
+        // Check if event is closed and prevent editing
+        const eventClosedDate = event.eventClosed ? new Date(event.eventClosed) : null;
+        const today = new Date();
+
+        if (eventClosedDate && eventClosedDate < today) {
+            setSnackbar({
+                open: true,
+                message: 'Cannot edit closed events. The event date has passed.',
+                severity: 'warning'
+            });
+            return;
+        }
+
+        // Format the event data for the form
+        const formattedEvent = {
+            ...event,
+            // Format eventClosed for the date input field (YYYY-MM-DD)
+            eventClosed: event.eventClosed ? new Date(event.eventClosed).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            // Ensure financeYearId is properly set - extract ID from object if needed
+            financeYearId: (() => {
+                const financeYear = event.financeYearId || event.financialYearId || event.financeYear || event.financialYear;
+                if (typeof financeYear === 'string') {
+                    return financeYear;
+                } else if (financeYear && typeof financeYear === 'object') {
+                    return financeYear.id || financeYear._id;
+                }
+                return null;
+            })()
+        };
+
         setSelectedEvent(event);
+        setEditingEvent(formattedEvent);
         setOpenEditDialog(true);
     };
 
     const handleCloseEditDialog = () => {
         setOpenEditDialog(false);
         setSelectedEvent(null);
-    };
-
-    const handleOpenPaymentModal = (event) => {
-        setSelectedEvent(event);
-        setOpenPaymentModal(true);
-    };
-
-    const handleClosePaymentModal = () => {
-        setOpenPaymentModal(false);
-        setSelectedEvent(null);
+        setEditingEvent(null);
     };
 
     const handleCreateEvent = async (formData) => {
         try {
             await createEventMutation.mutateAsync(formData);
-            
+
             setSnackbar({
                 open: true,
                 message: 'Event created successfully!',
                 severity: 'success'
             });
-
             handleCloseCreateDialog();
             refetch();
         } catch (error) {
@@ -173,9 +194,10 @@ const TableEvents = () => {
     };
 
     const handleUpdateEvent = async (formData) => {
+        console.log('Update event called with:', { id: selectedEvent.id, formData });
         try {
             await updateEventMutation.mutateAsync({ id: selectedEvent.id, ...formData });
-            
+
             setSnackbar({
                 open: true,
                 message: 'Event updated successfully!',
@@ -185,10 +207,24 @@ const TableEvents = () => {
             handleCloseEditDialog();
             refetch();
         } catch (error) {
-            console.error('Error updating event:', error);
+            // Handle specific error cases
+            let errorMessage = 'Failed to update event. Please try again.';
+            if (error.message) {
+                errorMessage = error.message;
+            } else if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.data?.message) {
+                errorMessage = error.data.message;
+            }
+
+            // Check for specific closed event error
+            if (errorMessage.toLowerCase().includes('closed event') || errorMessage.toLowerCase().includes('cannot update')) {
+                errorMessage = 'Cannot update closed events. The event date has passed and cannot be modified.';
+            }
+
             setSnackbar({
                 open: true,
-                message: error.message || 'Failed to update event. Please try again.',
+                message: errorMessage,
                 severity: 'error'
             });
         }
@@ -198,7 +234,7 @@ const TableEvents = () => {
         if (window.confirm('Are you sure you want to delete this event?')) {
             try {
                 await deleteEventMutation.mutateAsync(eventId);
-                
+
                 setSnackbar({
                     open: true,
                     message: 'Event deleted successfully!',
@@ -221,24 +257,53 @@ const TableEvents = () => {
         setSnackbar(prev => ({ ...prev, open: false }));
     };
 
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'upcoming': return 'primary';
-            case 'ongoing': return 'warning';
-            case 'completed': return 'success';
-            case 'cancelled': return 'error';
-            default: return 'default';
-        }
-    };
+    // const getStatusColor = (status) => {
+    //     switch (status) {
+    //         case 'upcoming': return 'primary';
+    //         case 'ongoing': return 'warning';
+    //         case 'completed': return 'success';
+    //         case 'cancelled': return 'error';
+    //         default: return 'default';
+    //     }
+    // };
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-IN', {
-            year: 'numeric',
+            // year: 'numeric',
             month: 'short',
             day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            // hour: '2-digit',
+            // minute: '2-digit'
         });
+    };
+
+    // const isEventClosed = (event) => {
+    //     console.log(event, 'event');
+
+    //     if (!event.eventClosed) return false;
+    //     const eventClosedDate = new Date(event.eventClosed);
+    //     const today = new Date();
+    //     return eventClosedDate < today;
+    // };
+
+    const isEventClosed = (event) => {
+        // If the event does not have a closed date, it is not closed.
+        if (!event.eventClosed) {
+            return false;
+        }
+
+        // Create new Date objects for the closed date and today's date.
+        // This is important to avoid modifying the original data.
+        const eventClosedDate = new Date(event.eventClosed);
+        const today = new Date();
+
+        // Reset the time for both dates to midnight (00:00:00.000)
+        // to compare only the day, month, and year.
+        eventClosedDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        // The event is closed if its closing date is on or before today.
+        return eventClosedDate <= today;
     };
 
     return (
@@ -296,10 +361,10 @@ const TableEvents = () => {
                     className="rmui-table border"
                 >
                     <Table sx={{ minWidth: 750 }} aria-label="Recent Leads Table">
-                        <TableHead className="bg-f6f7f9">
+                        <TableHead className="bg-primary-50">
                             <TableRow
                                 sx={{
-                                    "& th": {
+                                    th: {
                                         fontWeight: "500",
                                         padding: "10px 24px",
                                         fontSize: "14px",
@@ -326,6 +391,9 @@ const TableEvents = () => {
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
                                     Created
+                                </TableCell>
+                                <TableCell className="text-black border-bottom">
+                                    Ended
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
                                     Actions
@@ -395,35 +463,49 @@ const TableEvents = () => {
                                         <TableCell className="border-bottom">
                                             <Typography
                                                 sx={{
-                                                    fontSize: "15px",
+                                                    fontSize: "12px",
                                                     fontWeight: "500",
                                                     color: "primary.main",
+                                                    textAlign: 'center'
                                                 }}
                                             >
-                                                ₹{row.eventAmount}
+                                                ${row.eventAmount}
                                             </Typography>
                                         </TableCell>
-
                                         <TableCell className="border-bottom">
-                                            {formatDate(row.eventTime)}
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "12px",
+                                                    fontWeight: "500",
+                                                    color: "primary.main",
+                                                    textAlign: 'center'
+                                                }}
+                                            >
+                                                {row.eventTime} {row.eventTime < '12.00' ? "AM" : "PM"}
+                                            </Typography>
                                         </TableCell>
-
                                         <TableCell className="border-bottom">
                                             {row.eventLocation}
                                         </TableCell>
-
-                                        <TableCell className="border-bottom">
-                                            <Chip
+                                        {/* <Chip
                                                 label={row.eventStatus}
                                                 color={getStatusColor(row.eventStatus)}
                                                 size="small"
-                                            />
+                                            /> */}
+                                        <TableCell className="border-bottom">
+                                            <div
+                                                className={`trezo-badge  ${isEventClosed(row) ? 'trezo-badge' : 'inProgress'}`}
+                                                style={{ fontSize: '8px', width: '57px' }}
+                                            >
+                                                {isEventClosed(row) ? 'Resolved' : 'In Progress'}
+                                            </div>
                                         </TableCell>
-
                                         <TableCell className="border-bottom">
                                             {formatDate(row.createdAt)}
                                         </TableCell>
-
+                                        <TableCell className="border-bottom">
+                                            {formatDate(row.eventClosed)}
+                                        </TableCell>
                                         <TableCell className="border-bottom">
                                             <Box
                                                 sx={{
@@ -432,27 +514,28 @@ const TableEvents = () => {
                                                     gap: 1,
                                                 }}
                                             >
-                                                <IconButton
-                                                    aria-label="payments"
-                                                    color="primary"
-                                                    sx={{ padding: "5px" }}
-                                                    onClick={() => handleOpenPaymentModal(row)}
-                                                    title="Manage Payments"
-                                                >
-                                                    <i
-                                                        className="material-symbols-outlined"
-                                                        style={{ fontSize: "16px" }}
+                                                <Link to={`/events/contributors/${row?._id}`}>
+                                                    <IconButton
+                                                        aria-label="contributors"
+                                                        color="primary"
+                                                        sx={{ padding: "5px" }}
+                                                        title="Manage Contributors"
                                                     >
-                                                        payments
-                                                    </i>
-                                                </IconButton>
-
+                                                        <i
+                                                            className="material-symbols-outlined"
+                                                            style={{ fontSize: "16px" }}
+                                                        >
+                                                            payments
+                                                        </i>
+                                                    </IconButton>
+                                                </Link>
                                                 <IconButton
                                                     aria-label="edit"
                                                     color="secondary"
                                                     sx={{ padding: "5px" }}
                                                     onClick={() => handleOpenEditDialog(row)}
-                                                    title="Edit Event"
+                                                    disabled={isEventClosed(row)}
+                                                    title={isEventClosed(row) ? "Cannot edit closed event" : "Edit Event"}
                                                 >
                                                     <i
                                                         className="material-symbols-outlined"
@@ -467,6 +550,7 @@ const TableEvents = () => {
                                                     color="error"
                                                     sx={{ padding: "5px" }}
                                                     onClick={() => handleDeleteEvent(row.id)}
+                                                    disabled={isEventClosed(row)}
                                                     title="Delete Event"
                                                 >
                                                     <i
@@ -570,17 +654,13 @@ const TableEvents = () => {
                         onSubmit={handleUpdateEvent}
                         onCancel={handleCloseEditDialog}
                         loading={updateEventMutation.isPending}
-                        initialData={selectedEvent}
+                        isEdit={true}
+                        defaultValues={editingEvent}
                     />
                 </DialogContent>
             </Dialog>
 
-            {/* Event Payment Modal */}
-            <EventPaymentModal
-                open={openPaymentModal}
-                onClose={handleClosePaymentModal}
-                event={selectedEvent}
-            />
+
 
             {/* Snackbar for notifications */}
             <Snackbar

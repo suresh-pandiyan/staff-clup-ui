@@ -550,7 +550,9 @@ const EventForm = ({ eventData = {}, onSuccess, onError }) => {
             <TextField {...getFieldProps(form, "category", "Category")} select>
               {categoryOptions.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
+              
                   {option.label}
+               
                 </MenuItem>
               ))}
             </TextField>

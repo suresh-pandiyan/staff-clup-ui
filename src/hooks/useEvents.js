@@ -6,7 +6,13 @@ export const useEvents = (params = {}) => {
     return useApiQuery(
         ['events', params],
         () => eventService.getAll(params),
-        { staleTime: 2 * 60 * 1000 } // 2 minutes
+        // { staleTime: 2 * 60 * 1000 } // 2 minutes
+    );
+};
+export const useSingleEvents = (params = {}) => {
+    return useApiQuery(
+        ['events', params],
+        () => eventService.singleEvent(params),
     );
 };
 
@@ -80,4 +86,34 @@ export const useCancelEventRegistration = () => {
             invalidateQueries: [['events'], ['event']],
         }
     );
-}; 
+};
+
+
+// export const useEventsContributors = (id = {}) => {
+//     return useApiQuery(
+//         ['events-contributors', id],
+//         () => eventService.getAllContributors(id),
+//     );
+// };
+
+// hooks/index.js
+export const useEventsContributors = (id, params = {}) => {
+    return useApiQuery(
+        ['events-contributors', id, params], // include params in cache key
+        () => eventService.getAllContributors(id, params),
+        {
+            enabled: !!id, // don't run without id
+        }
+    );
+};
+
+
+export const useEventsContributorsStatus = () => {
+    return useApiMutation(
+        ({ eventId, userId, paymentStatus }) =>
+            eventService.updateEventContributorsStatus(eventId, userId, { paymentStatus }),
+        {
+            invalidateQueries: [['events-contributors']],
+        }
+    );
+};

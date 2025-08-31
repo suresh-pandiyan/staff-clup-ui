@@ -1,5 +1,6 @@
 import { BaseService } from './baseService';
 import { mockEvents, getEventPayments, addEventPayment, removeEventPayment } from '../utils/mockEventData';
+import { apiHelpers } from '../helpers/axiosConfig';
 
 export class EventService extends BaseService {
     constructor() {
@@ -10,73 +11,59 @@ export class EventService extends BaseService {
     async getAll(params = {}) {
         try {
             // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            let filteredEvents = [...mockEvents];
-            
-            // Apply filters
-            if (params.status) {
-                filteredEvents = filteredEvents.filter(event => event.eventStatus === params.status);
-            }
-            
-            return {
-                data: filteredEvents,
-                total: filteredEvents.length,
-                success: true
-            };
+            const response = await apiHelpers.get(`/events/financial-year/${params}`);
+            return response;
+
+        } catch (error) {
+            throw error;
+        }
+    }
+    async singleEvent(params = {}) {
+        try {
+            const response = await apiHelpers.get(`/events/${params}`);
+            return response;
         } catch (error) {
             throw error;
         }
     }
 
     // Override create method to use mock data
-    async create(eventData) {
+    async create(eventsData) {
         try {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            const newEvent = {
-                id: Date.now(),
-                ...eventData,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            
-            mockEvents.push(newEvent);
-            
-            return {
-                data: newEvent,
-                success: true
-            };
+            const response = await apiHelpers.post(`/events`, eventsData);
+            return response;
         } catch (error) {
             throw error;
         }
     }
+    // async create(eventData) {
+    //     try {
+    //         // Simulate API delay
+    //         await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Override update method to use mock data
+    //         const newEvent = {
+    //             id: Date.now(),
+    //             ...eventData,
+    //             createdAt: new Date().toISOString(),
+    //             updatedAt: new Date().toISOString()
+    //         };
+
+    //         mockEvents.push(newEvent);
+
+    //         return {
+    //             data: newEvent,
+    //             success: true
+    //         };
+    //     } catch (error) {
+    //         throw error;
+    //     }
+    // }
+
+    // Override update method to use API
     async update(id, eventData) {
         try {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 600));
-            
-            const eventIndex = mockEvents.findIndex(event => event.id === id);
-            if (eventIndex === -1) {
-                throw new Error('Event not found');
-            }
-            
-            const updatedEvent = {
-                ...mockEvents[eventIndex],
-                ...eventData,
-                id,
-                updatedAt: new Date().toISOString()
-            };
-            
-            mockEvents[eventIndex] = updatedEvent;
-            
-            return {
-                data: updatedEvent,
-                success: true
-            };
+            const response = await apiHelpers.put(`/events/${id}`, eventData);
+            return response;
         } catch (error) {
             throw error;
         }
@@ -85,20 +72,8 @@ export class EventService extends BaseService {
     // Override delete method to use mock data
     async delete(id) {
         try {
-            // Simulate API delay
-            await new Promise(resolve => setTimeout(resolve, 400));
-            
-            const eventIndex = mockEvents.findIndex(event => event.id === id);
-            if (eventIndex === -1) {
-                throw new Error('Event not found');
-            }
-            
-            mockEvents.splice(eventIndex, 1);
-            
-            return {
-                success: true,
-                message: 'Event deleted successfully'
-            };
+            const response = await apiHelpers.delete(`/events/${id}`);
+            return response;
         } catch (error) {
             throw error;
         }
@@ -150,7 +125,7 @@ export class EventService extends BaseService {
         try {
             // Simulate API delay
             await new Promise(resolve => setTimeout(resolve, 300));
-            
+
             const payments = getEventPayments(eventId);
             return {
                 data: payments,
@@ -165,7 +140,7 @@ export class EventService extends BaseService {
         try {
             // Simulate API delay
             await new Promise(resolve => setTimeout(resolve, 500));
-            
+
             const newPayment = addEventPayment(paymentData.eventId, paymentData);
             return {
                 data: newPayment,
@@ -180,7 +155,7 @@ export class EventService extends BaseService {
         try {
             // Simulate API delay
             await new Promise(resolve => setTimeout(resolve, 300));
-            
+
             const success = removeEventPayment(paymentId);
             return {
                 success,
@@ -208,6 +183,43 @@ export class EventService extends BaseService {
             throw error;
         }
     }
+ Z   // async getAllContributors(eventId) {
+    //     try {
+    //         const response = await apiHelpers.get(`/events/contributors/${eventId}`);
+    //         return response;
+    //     } catch (error) {
+    //         throw error;
+    //     }
+    // }
+
+    // EventService.js
+async getAllContributors(eventId, params = {}) {
+    try {
+        const response = await apiHelpers.get(`/events/contributors/${eventId}`, {
+            params, // <-- add this to send ?search=...
+        });
+        return response;
+    } catch (error) {
+        throw error;
+    }
 }
+
+
+    async updateEventContributorsStatus(eventId, userId, eventData) {
+        console.log(eventId, userId, eventData, 'eventData event update');
+
+        try {
+            const response = await apiHelpers.patch(
+                `/events/${eventId}/contributors/${userId}/status`,
+                eventData
+            );
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    }
+}
+
+
 
 export const eventService = new EventService(); 

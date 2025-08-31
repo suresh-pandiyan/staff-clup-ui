@@ -18,6 +18,7 @@ import EmergencyFunds from "./pages/emergency-funds";
 import Events from "./pages/events";
 import Login from "./pages/login";
 import Dashboard from "./pages/dashboard/Analytics";
+const EventsContributors = React.lazy(() => import('./pages/eventsContributors'));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -70,25 +71,27 @@ const AppLayout = ({ active, toggleActive }) => {
 
       <div className="main-content">
         <ScrollToTop />
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
 
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+            {/* Protected Routes */}
+            <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
+            <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
+            <Route path="/shares" element={<ProtectedRoute><Shares /></ProtectedRoute>} />
+            <Route path="/chitfunds" element={<ProtectedRoute><ChitFunds /></ProtectedRoute>} />
+            <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
+            <Route path="/emergency-funds" element={<ProtectedRoute><EmergencyFunds /></ProtectedRoute>} />
+            <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+            <Route path="/events/contributors/:id" element={<ProtectedRoute><EventsContributors /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
 
-          {/* Protected Routes */}
-          <Route path="/accounts" element={<ProtectedRoute><Accounts /></ProtectedRoute>} />
-          <Route path="/members" element={<ProtectedRoute><Members /></ProtectedRoute>} />
-          <Route path="/shares" element={<ProtectedRoute><Shares /></ProtectedRoute>} />
-          <Route path="/chitfunds" element={<ProtectedRoute><ChitFunds /></ProtectedRoute>} />
-          <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
-          <Route path="/emergency-funds" element={<ProtectedRoute><EmergencyFunds /></ProtectedRoute>} />
-          <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-          <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-
-          {/* Dashboard Sub-routes */}
-          <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        </Routes>
+            {/* Dashboard Sub-routes */}
+            <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          </Routes>
+        </React.Suspense>
 
         {/* {!isAuthPage && <Footer />} */}
       </div>
