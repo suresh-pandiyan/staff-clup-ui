@@ -30,6 +30,7 @@ import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent } from "../..
 import { Link } from 'react-router-dom';
 import EventForm from "../forms/EventForm";
 import { useApp } from "../../contexts/AppContext";
+import { useDebounce } from "../../hooks/useDebounce";
 
 
 function TablePaginationActions(props) {
@@ -94,6 +95,7 @@ const TableEvents = () => {
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [searchQuery, setSearchQuery] = useState("");
+    const debounceSearch = useDebounce(searchQuery);
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
     const [openEditDialog, setOpenEditDialog] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
@@ -104,7 +106,11 @@ const TableEvents = () => {
         severity: 'success'
     });
     const { selectedFinancialYear } = useApp();
-    const { data: events, refetch, isLoading: eventsLoading, error: eventsError } = useEvents(selectedFinancialYear?.id);
+    const { data: events, refetch, isLoading: eventsLoading, error: eventsError } = useEvents(selectedFinancialYear?.id, { search: debounceSearch });
+    
+    console.log(events.data , 'eventsStatus');
+    
+
     const createEventMutation = useCreateEvent();
     const updateEventMutation = useUpdateEvent();
     const deleteEventMutation = useDeleteEvent();
@@ -119,7 +125,7 @@ const TableEvents = () => {
     };
 
     const handleSearch = (event) => {
-        setSearchQuery(event.target.value.toLowerCase());
+        setSearchQuery(event.target.value);
     };
 
     const handleOpenCreateDialog = () => {
@@ -494,10 +500,10 @@ const TableEvents = () => {
                                             /> */}
                                         <TableCell className="border-bottom">
                                             <div
-                                                className={`trezo-badge  ${isEventClosed(row) ? 'trezo-badge' : 'inProgress'}`}
+                                                className={`trezo-badge  ${row.eventStatus ? 'inProgress' : 'trezo-badge' }`}
                                                 style={{ fontSize: '8px', width: '57px' }}
                                             >
-                                                {isEventClosed(row) ? 'Resolved' : 'In Progress'}
+                                                {row.eventStatus ?  'In Progress' : 'Resolved'}
                                             </div>
                                         </TableCell>
                                         <TableCell className="border-bottom">

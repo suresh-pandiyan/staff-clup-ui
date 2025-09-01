@@ -6,9 +6,10 @@ export const useEvents = (params = {}) => {
     return useApiQuery(
         ['events', params],
         () => eventService.getAll(params),
-        // { staleTime: 2 * 60 * 1000 } // 2 minutes
+        // No staleTime for search functionality - need fresh data
     );
 };
+
 export const useSingleEvents = (params = {}) => {
     return useApiQuery(
         ['events', params],
