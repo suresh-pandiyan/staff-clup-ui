@@ -2,11 +2,22 @@ import { useApiQuery, useApiMutation } from './index';
 import { emergencyFundService } from '../services';
 
 // Emergency Fund-related hooks
-export const useEmergencyFunds = (params = {}) => {
+
+
+export const useCreateEmergencyFund = () => {
+    return useApiMutation(
+        (emergencyFundData) => emergencyFundService.create(emergencyFundData),
+        {
+            invalidateQueries: [['emergency-funds']],
+        }
+    );
+};
+// get all emergency funds by financial year
+export const useGetEmergencyFunds = (params = {}) => {
     return useApiQuery(
         ['emergency-funds', params],
         () => emergencyFundService.getAll(params),
-        { staleTime: 5 * 60 * 1000 }
+        // { staleTime: 5 * 60 * 1000 }
     );
 };
 
@@ -21,14 +32,6 @@ export const useEmergencyFund = (id) => {
     );
 };
 
-export const useCreateEmergencyFund = () => {
-    return useApiMutation(
-        (emergencyFundData) => emergencyFundService.create(emergencyFundData),
-        {
-            invalidateQueries: [['emergency-funds']],
-        }
-    );
-};
 
 export const useUpdateEmergencyFund = () => {
     return useApiMutation(

@@ -647,12 +647,12 @@ const AddUserForm = () => {
               type="submit"
               variant="contained"
               color="error"
-              sx={{
+sx={{
                 textTransform: "capitalize",
                 borderRadius: "6px",
                 fontWeight: "500",
                 fontSize: { xs: "13px", sm: "16px" },
-                padding: { xs: "10px 20px", sm: "10px 24px" },
+                paddi              ng: { xs: "10px 20px", sm: "10px 24px" },
                 color: "#fff !important",
                 boxShadow: "none",
               }}

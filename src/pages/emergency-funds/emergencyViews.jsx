@@ -1,10 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { CircularProgress } from "@mui/material";
-import TableEmergency from "../../components_v2/tables/TableEmergency";
 import { commonUndefinedLoadingStyles } from "../../components_v2/styles/commonStyles";
+import TableDetailsEmergency from "../../components_v2/tables/TableDetailsEmergency";
 
-const EmergencyFunds = () => {
+const EmergencyViews = () => {
     return (
         <>
             {/* Breadcrumb */}
@@ -17,19 +17,20 @@ const EmergencyFunds = () => {
                             Dashboard
                         </Link>
                     </li>
-                    <li>Emergency Funds</li>
-
+                    <li>Emergency Funds </li>
+                    <li>Emergency Fund Details</li>
                 </ul>
             </div>
+            {/* Breadcrumb */}
             <React.Suspense fallback={
                 <div style={commonUndefinedLoadingStyles}>
                     <CircularProgress variant="determinate" value={25} />
                 </div>
             }>
-                <TableEmergency />
+                <TableDetailsEmergency />
             </React.Suspense>
         </>
     );
 };
 
-export default EmergencyFunds;
+export default EmergencyViews;

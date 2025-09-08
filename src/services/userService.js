@@ -51,6 +51,14 @@ export class UserService extends BaseService {
             throw error;
         }
     }
+    async delete(id) {
+        try {
+            const response = await apiHelpers.delete(`/users/${id}`);
+            return response;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
 
 export const userService = new UserService(); 

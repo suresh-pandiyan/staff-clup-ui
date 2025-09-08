@@ -2,10 +2,10 @@ import { useApiQuery, useApiMutation } from './index';
 import { eventService } from '../services';
 
 // Event-related hooks
-export const useEvents = (params = {}) => {
+export const useEvents = (financialYearId, params = {}) => {
     return useApiQuery(
-        ['events', params],
-        () => eventService.getAll(params),
+        ['events', financialYearId, params],
+        () => eventService.getAll(financialYearId, params),
         // No staleTime for search functionality - need fresh data
     );
 };
@@ -114,7 +114,7 @@ export const useEventsContributorsStatus = () => {
         ({ eventId, userId, paymentStatus }) =>
             eventService.updateEventContributorsStatus(eventId, userId, { paymentStatus }),
         {
-            invalidateQueries: [['events-contributors']],
+            invalidateQueries: [['events-contributors'],['events'],],
         }
     );
 };

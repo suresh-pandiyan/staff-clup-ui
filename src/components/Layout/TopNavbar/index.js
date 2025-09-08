@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { AppBar, Toolbar, IconButton, Box } from "@mui/material";
+import { AppBar, Toolbar, IconButton, Box ,FormControl, InputLabel, Select, MenuItem } from "@mui/material";
+
 import Tooltip from "@mui/material/Tooltip";
 import { ViewList, ViewModule, Sort, CalendarMonth } from "@mui/icons-material";
 import SearchForm from "./SearchForm";
@@ -23,7 +24,6 @@ const TopNavbar = ({ toggleActive }) => {
 
   const handleFinancialYearSelect = (option) => {
     setSelectedFinancialYear(option);
-    console.log('Selected Financial Year:', option);
     // You can add additional logic here like updating context, localStorage, etc.
   };
 
@@ -60,8 +60,11 @@ const TopNavbar = ({ toggleActive }) => {
     };
   }, []);
 
-  console.log('financialYears', financialYears);
-
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  
   return (
     <div className="top-navbar-dark">
       <AppBar
@@ -151,6 +154,32 @@ const TopNavbar = ({ toggleActive }) => {
                 disabled={financialYearsLoading}
               />
 
+<InputLabel id="month-select-label">Month</InputLabel>
+      <Select
+        labelId="month-select-label"
+        id="month-select"
+     //   value={selectedMonth}
+      //  onChange={handleChange}
+        label="Month"
+      >
+        {/*
+          An optional, empty MenuItem can serve as a placeholder.
+          Its value is an empty string, matching the initial state.
+        */}
+        <MenuItem value="">
+          <em>Select a month</em>
+        </MenuItem>
+        
+        {/*
+          Map over the 'months' array to generate a MenuItem for each month.
+          The key prop is essential for React's rendering efficiency.
+        */}
+        {months.map((month) => (
+          <MenuItem key={month} value={month}>
+            {month}
+          </MenuItem>
+        ))}
+      </Select>
               {/* AppsMenu */}
               {/* <AppsMenu /> */}
             </Box>
@@ -171,7 +200,7 @@ const TopNavbar = ({ toggleActive }) => {
               {/* <ChooseLanguage /> */}
 
               {/* FullscreenButton */}
-              {/* <FullscreenButton /> */}
+              <FullscreenButton />
 
               {/* Notifications */}
               <Notifications />

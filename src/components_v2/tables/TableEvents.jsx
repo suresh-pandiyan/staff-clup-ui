@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import {
     Card,
     Box,
@@ -22,6 +22,8 @@ import {
     Alert,
     Snackbar,
     Chip,
+    CircularProgress,
+    Grid,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
@@ -31,6 +33,8 @@ import { Link } from 'react-router-dom';
 import EventForm from "../forms/EventForm";
 import { useApp } from "../../contexts/AppContext";
 import { useDebounce } from "../../hooks/useDebounce";
+import { useCallback } from "react";
+import {commonCancelStyles} from "../styles/commonStyles"
 
 
 function TablePaginationActions(props) {
@@ -92,40 +96,68 @@ function TablePaginationActions(props) {
 }
 
 const TableEvents = () => {
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [searchQuery, setSearchQuery] = useState("");
-    const debounceSearch = useDebounce(searchQuery);
-    const [openCreateDialog, setOpenCreateDialog] = useState(false);
-    const [openEditDialog, setOpenEditDialog] = useState(false);
-    const [selectedEvent, setSelectedEvent] = useState(null);
-    const [editingEvent, setEditingEvent] = useState(null);
-    const [snackbar, setSnackbar] = useState({
+    const [page, setPage] = React.useState(0);
+    const [searchQuery, setSearchQuery] = React.useState("");
+    const [openCreateDialog, setOpenCreateDialog] = React.useState(false);
+    const [openEditDialog, setOpenEditDialog] = React.useState(false);
+    const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+    const [selectedEvent, setSelectedEvent] = React.useState(null);
+    const [editingEvent, setEditingEvent] = React.useState(null);
+    const [deleteEventId, setDeleteEventId] = React.useState(null);
+    const [snackbar, setSnackbar] = React.useState({
         open: false,
         message: '',
         severity: 'success'
     });
+    const debounceSearch = useDebounce(searchQuery);
+    const [isPaginationLoading, setIsPaginationLoading] = React.useState(false);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
     const { selectedFinancialYear } = useApp();
-    const { data: events, refetch, isLoading: eventsLoading, error: eventsError } = useEvents(selectedFinancialYear?.id, { search: debounceSearch });
-    
-    console.log(events.data , 'eventsStatus');
-    
+
+    // Static rows per page since backend handles the limit
+    const rowsPerPage = 10;
+
+    // Build pagination parameters for the API call
+    const paginationParams = {
+        page,
+        search: debounceSearch
+        // rowsPerPage is not needed since backend has fixed limit of 10
+    };
+    const { data: events, refetch, isLoading: eventsLoading, error: eventsError } = useEvents(
+        selectedFinancialYear?.id,
+        paginationParams
+    );
+
+    // Refetch data when pagination parameters change
+    React.useEffect(() => {
+        if (selectedFinancialYear?.id) {
+            refetch();
+        }
+    }, [page, debounceSearch, selectedFinancialYear?.id, refetch]);
+
+    // Reset pagination loading when data is loaded
+    React.useEffect(() => {
+        if (!eventsLoading && events) {
+            setIsPaginationLoading(false);
+        }
+    }, [eventsLoading, events]);
+
 
     const createEventMutation = useCreateEvent();
     const updateEventMutation = useUpdateEvent();
-    const deleteEventMutation = useDeleteEvent();
+  //  const deleteEventMutation = useDeleteEvent();
+    const { mutateAsync: deleteEventMutation, isPending: deleteEventLoading } = useDeleteEvent();
 
     const handleChangePage = (event, newPage) => {
+        setIsPaginationLoading(true);
         setPage(newPage);
+        // Scroll to top of table for better UX
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-
-    const handleChangeRowsPerPage = (event) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
-        setPage(0);
-    };
-
+    // No need for handleChangeRowsPerPage since rowsPerPage is static
     const handleSearch = (event) => {
         setSearchQuery(event.target.value);
+        setPage(0); // Reset to first page when searching
     };
 
     const handleOpenCreateDialog = () => {
@@ -134,23 +166,10 @@ const TableEvents = () => {
 
     const handleCloseCreateDialog = () => {
         setOpenCreateDialog(false);
+        setOpenDeleteDialog(false)
     };
 
     const handleOpenEditDialog = (event) => {
-        // Check if event is closed and prevent editing
-        const eventClosedDate = event.eventClosed ? new Date(event.eventClosed) : null;
-        const today = new Date();
-
-        if (eventClosedDate && eventClosedDate < today) {
-            setSnackbar({
-                open: true,
-                message: 'Cannot edit closed events. The event date has passed.',
-                severity: 'warning'
-            });
-            return;
-        }
-
-        // Format the event data for the form
         const formattedEvent = {
             ...event,
             // Format eventClosed for the date input field (YYYY-MM-DD)
@@ -178,17 +197,28 @@ const TableEvents = () => {
         setEditingEvent(null);
     };
 
-    const handleCreateEvent = async (formData) => {
+    const handleCreateEvent = useCallback(async (formData) => {
+        // Prevent double submission
+        if (createEventMutation.isPending || isSubmitting) {
+            return;
+        }
+        // Set submitting state immediately
+        setIsSubmitting(true);
         try {
-            await createEventMutation.mutateAsync(formData);
-
-            setSnackbar({
-                open: true,
-                message: 'Event created successfully!',
-                severity: 'success'
-            });
-            handleCloseCreateDialog();
-            refetch();
+            // Disable the form immediately to prevent double submission
+            const result = await createEventMutation.mutateAsync(formData);
+            // Only proceed if we get a successful result
+            if (result && result.success !== false) {
+                setSnackbar({
+                    open: true,
+                    message: 'Event created successfully!',
+                    severity: 'success'
+                });
+                handleCloseCreateDialog();
+                refetch();
+            } else {
+                throw new Error('Event creation failed');
+            }
         } catch (error) {
             console.error('Error creating event:', error);
             setSnackbar({
@@ -196,22 +226,37 @@ const TableEvents = () => {
                 message: error.message || 'Failed to create event. Please try again.',
                 severity: 'error'
             });
+        } finally {
+            setIsSubmitting(false);
         }
-    };
+    }, [createEventMutation, isSubmitting, handleCloseCreateDialog, refetch]);
 
-    const handleUpdateEvent = async (formData) => {
+    const handleUpdateEvent = useCallback(async (formData) => {
+        // Prevent double submission
+        if (updateEventMutation.isPending || isSubmitting) {
+            return;
+        }
+
+        // Set submitting state immediately
+        setIsSubmitting(true);
+
         console.log('Update event called with:', { id: selectedEvent.id, formData });
         try {
-            await updateEventMutation.mutateAsync({ id: selectedEvent.id, ...formData });
+            const result = await updateEventMutation.mutateAsync({ id: selectedEvent.id, ...formData });
 
-            setSnackbar({
-                open: true,
-                message: 'Event updated successfully!',
-                severity: 'success'
-            });
+            // Only proceed if we get a successful result
+            if (result && result.success !== false) {
+                setSnackbar({
+                    open: true,
+                    message: 'Event updated successfully!',
+                    severity: 'success'
+                });
 
-            handleCloseEditDialog();
-            refetch();
+                handleCloseEditDialog();
+                refetch();
+            } else {
+                throw new Error('Event update failed');
+            }
         } catch (error) {
             // Handle specific error cases
             let errorMessage = 'Failed to update event. Please try again.';
@@ -222,7 +267,6 @@ const TableEvents = () => {
             } else if (error.data?.message) {
                 errorMessage = error.data.message;
             }
-
             // Check for specific closed event error
             if (errorMessage.toLowerCase().includes('closed event') || errorMessage.toLowerCase().includes('cannot update')) {
                 errorMessage = 'Cannot update closed events. The event date has passed and cannot be modified.';
@@ -233,45 +277,44 @@ const TableEvents = () => {
                 message: errorMessage,
                 severity: 'error'
             });
+        } finally {
+            // Always reset submitting state
+            setIsSubmitting(false);
         }
-    };
+    }, [updateEventMutation, isSubmitting, selectedEvent, handleCloseEditDialog, refetch]);
 
-    const handleDeleteEvent = async (eventId) => {
-        if (window.confirm('Are you sure you want to delete this event?')) {
+  
+    const onSubmitDeleteEvent = async () => {
             try {
-                await deleteEventMutation.mutateAsync(eventId);
-
+                await deleteEventMutation(deleteEventId);
                 setSnackbar({
                     open: true,
                     message: 'Event deleted successfully!',
                     severity: 'success'
                 });
-
                 refetch();
             } catch (error) {
-                console.error('Error deleting event:', error);
                 setSnackbar({
                     open: true,
                     message: error.message || 'Failed to delete event. Please try again.',
                     severity: 'error'
                 });
             }
-        }
+            finally{
+                setOpenDeleteDialog(false);
+            }
     };
+
+    const handleDeleteEvent = (id) => {
+        setOpenDeleteDialog(true);
+        setDeleteEventId(id);
+    }
 
     const handleCloseSnackbar = () => {
         setSnackbar(prev => ({ ...prev, open: false }));
     };
 
-    // const getStatusColor = (status) => {
-    //     switch (status) {
-    //         case 'upcoming': return 'primary';
-    //         case 'ongoing': return 'warning';
-    //         case 'completed': return 'success';
-    //         case 'cancelled': return 'error';
-    //         default: return 'default';
-    //     }
-    // };
+
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-IN', {
@@ -283,34 +326,12 @@ const TableEvents = () => {
         });
     };
 
-    // const isEventClosed = (event) => {
-    //     console.log(event, 'event');
 
-    //     if (!event.eventClosed) return false;
-    //     const eventClosedDate = new Date(event.eventClosed);
-    //     const today = new Date();
-    //     return eventClosedDate < today;
-    // };
 
-    const isEventClosed = (event) => {
-        // If the event does not have a closed date, it is not closed.
-        if (!event.eventClosed) {
-            return false;
-        }
 
-        // Create new Date objects for the closed date and today's date.
-        // This is important to avoid modifying the original data.
-        const eventClosedDate = new Date(event.eventClosed);
-        const today = new Date();
-
-        // Reset the time for both dates to midnight (00:00:00.000)
-        // to compare only the day, month, and year.
-        eventClosedDate.setHours(0, 0, 0, 0);
-        today.setHours(0, 0, 0, 0);
-
-        // The event is closed if its closing date is on or before today.
-        return eventClosedDate <= today;
-    };
+    // Get total count from API response or fallback to current data length
+    const totalCount = events?.total || events?.data?.length || 0;
+    const currentData = events?.data || [];
 
     return (
         <>
@@ -324,18 +345,20 @@ const TableEvents = () => {
                 className="rmui-card"
             >
                 <Box mb="25px" sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <form className="t-search-form" style={{ flex: 1, maxWidth: "400px" }}>
-                        <label>
-                            <i className="material-symbols-outlined">search</i>
-                        </label>
-                        <input
-                            type="text"
-                            className="t-input"
-                            placeholder="Search here....."
-                            value={searchQuery}
-                            onChange={handleSearch}
-                        />
-                    </form>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                        <form className="t-search-form" style={{ maxWidth: "300px" }}>
+                            <label>
+                                <i className="material-symbols-outlined">search</i>
+                            </label>
+                            <input
+                                type="text"
+                                className="t-input"
+                                placeholder="Search events..."
+                                value={searchQuery}
+                                onChange={handleSearch}
+                            />
+                        </form>
+                    </Box>
                     <Button
                         variant="contained"
                         onClick={handleOpenCreateDialog}
@@ -372,64 +395,72 @@ const TableEvents = () => {
                                 sx={{
                                     th: {
                                         fontWeight: "500",
-                                        padding: "10px 24px",
+                                        padding: "10px 20px",
                                         fontSize: "14px",
                                     },
                                 }}
                             >
                                 <TableCell className="text-black border-bottom">
-                                    Event Name
+                                    Name
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
-                                    Event Description
+                                    Description
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
-                                    Event Amount
+                                    Amount
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
-                                    Event Time
+                                    Time
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
-                                    Event Location
+                                    Location
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
                                     Status
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
-                                    Created
+                                    Created - Ended
                                 </TableCell>
-                                <TableCell className="text-black border-bottom">
-                                    Ended
+                                <TableCell className="text-black border-bottom" >
+                                    Amount Collected
                                 </TableCell>
                                 <TableCell className="text-black border-bottom">
                                     Actions
                                 </TableCell>
                             </TableRow>
                         </TableHead>
-
                         <TableBody>
-                            {eventsLoading ? (
+                            {eventsLoading || isPaginationLoading ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                                    <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
                                         <Typography>Loading events...</Typography>
                                     </TableCell>
                                 </TableRow>
                             ) : eventsError ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                                    <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
                                         <Typography color="error">
                                             Error loading events: {eventsError.message}
                                         </Typography>
                                     </TableCell>
                                 </TableRow>
-                            ) : !events || events.data?.length === 0 ? (
+                            ) : !events || currentData?.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
-                                        <Typography>No events found</Typography>
+                                    <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+                                        <Box sx={{ textAlign: 'center' }}>
+                                            <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                                                No events found
+                                            </Typography>
+                                            {debounceSearch && (
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Try adjusting your search criteria
+                                                </Typography>
+                                            )}
+                                        </Box>
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                events && events.data.map((row) => (
+                                currentData && currentData.map((row) => (
                                     <TableRow
                                         key={row.id}
                                         sx={{
@@ -465,7 +496,6 @@ const TableEvents = () => {
                                                 {row.eventDescription}
                                             </Typography>
                                         </TableCell>
-
                                         <TableCell className="border-bottom">
                                             <Typography
                                                 sx={{
@@ -475,7 +505,7 @@ const TableEvents = () => {
                                                     textAlign: 'center'
                                                 }}
                                             >
-                                                ${row.eventAmount}
+                                                ₹{row.eventAmount}
                                             </Typography>
                                         </TableCell>
                                         <TableCell className="border-bottom">
@@ -493,24 +523,19 @@ const TableEvents = () => {
                                         <TableCell className="border-bottom">
                                             {row.eventLocation}
                                         </TableCell>
-                                        {/* <Chip
-                                                label={row.eventStatus}
-                                                color={getStatusColor(row.eventStatus)}
-                                                size="small"
-                                            /> */}
                                         <TableCell className="border-bottom">
                                             <div
-                                                className={`trezo-badge  ${row.eventStatus ? 'inProgress' : 'trezo-badge' }`}
+                                                className={`trezo-badge ${row.status === 'active' ? 'inProgress' : 'trezo-badge'}`}
                                                 style={{ fontSize: '8px', width: '57px' }}
                                             >
-                                                {row.eventStatus ?  'In Progress' : 'Resolved'}
+                                                {row.status === 'active' ? 'In Progress' : 'Resolved'}
                                             </div>
                                         </TableCell>
                                         <TableCell className="border-bottom">
-                                            {formatDate(row.createdAt)}
+                                            {formatDate(row.createdAt)} - {formatDate(row.eventClosed)}
                                         </TableCell>
                                         <TableCell className="border-bottom">
-                                            {formatDate(row.eventClosed)}
+                                            ₹{row.amountCollected.toLocaleString()}
                                         </TableCell>
                                         <TableCell className="border-bottom">
                                             <Box
@@ -540,8 +565,7 @@ const TableEvents = () => {
                                                     color="secondary"
                                                     sx={{ padding: "5px" }}
                                                     onClick={() => handleOpenEditDialog(row)}
-                                                    disabled={isEventClosed(row)}
-                                                    title={isEventClosed(row) ? "Cannot edit closed event" : "Edit Event"}
+                                                    title={"Edit Event"}
                                                 >
                                                     <i
                                                         className="material-symbols-outlined"
@@ -550,13 +574,11 @@ const TableEvents = () => {
                                                         edit
                                                     </i>
                                                 </IconButton>
-
                                                 <IconButton
                                                     aria-label="delete"
                                                     color="error"
                                                     sx={{ padding: "5px" }}
                                                     onClick={() => handleDeleteEvent(row.id)}
-                                                    disabled={isEventClosed(row)}
                                                     title="Delete Event"
                                                 >
                                                     <i
@@ -572,40 +594,61 @@ const TableEvents = () => {
                                 ))
                             )}
                         </TableBody>
-
                         <TableFooter>
                             <TableRow>
-                                <TablePagination
-                                    rowsPerPageOptions={[5, 10, 25, { label: "All", value: -1 }]}
-                                    colSpan={8}
-                                    count={events?.data?.length || 0}
-                                    rowsPerPage={rowsPerPage}
-                                    page={page}
-                                    slotProps={{
-                                        select: {
-                                            inputProps: {
-                                                "aria-label": "rows per page",
-                                            },
-                                            native: true,
-                                        },
-                                    }}
-                                    onPageChange={handleChangePage}
-                                    onRowsPerPageChange={handleChangeRowsPerPage}
-                                    ActionsComponent={TablePaginationActions}
-                                    sx={{
-                                        border: "none",
-                                    }}
-                                />
+                                <TableCell colSpan={9} sx={{ border: "none", p: 0 }}>
+                                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", px: 2 }}>
+                                        {isPaginationLoading && (
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                <CircularProgress size={16} />
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Loading...
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
+                                <TableCell colSpan={9} sx={{ border: "none", p: 0 }}>
+                                    <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                                        <TablePagination
+                                            rowsPerPageOptions={[10]} // Only 10 since backend has fixed limit
+                                            count={totalCount}
+                                            rowsPerPage={10} // Fixed to 10
+                                            page={page}
+                                            slotProps={{
+                                                select: {
+                                                    inputProps: {
+                                                        "aria-label": "rows per page",
+                                                    },
+                                                    native: true,
+                                                },
+                                            }}
+                                            onPageChange={handleChangePage}
+                                            ActionsComponent={TablePaginationActions}
+                                            sx={{
+                                                border: "none",
+                                                "& .MuiTablePagination-root": {
+                                                    border: "none",
+                                                },
+                                                "& .MuiTableCell-root": {
+                                                    border: "none",
+                                                    padding: "8px 0",
+                                                }
+                                            }}
+                                        />
+                                    </Box>
+                                </TableCell>
                             </TableRow>
                         </TableFooter>
                     </Table>
                 </TableContainer>
             </Card>
-
             {/* Create Event Dialog */}
             <Dialog
                 open={openCreateDialog}
-                onClose={createEventMutation.isPending ? undefined : handleCloseCreateDialog}
+                onClose={(createEventMutation.isPending || isSubmitting) ? undefined : handleCloseCreateDialog}
                 maxWidth="lg"
                 fullWidth
                 PaperProps={{
@@ -628,15 +671,14 @@ const TableEvents = () => {
                     <EventForm
                         onSubmit={handleCreateEvent}
                         onCancel={handleCloseCreateDialog}
-                        loading={createEventMutation.isPending}
+                        loading={createEventMutation.isPending || isSubmitting}
                     />
                 </DialogContent>
             </Dialog>
-
             {/* Edit Event Dialog */}
             <Dialog
                 open={openEditDialog}
-                onClose={updateEventMutation.isPending ? undefined : handleCloseEditDialog}
+                onClose={(updateEventMutation.isPending || isSubmitting) ? undefined : handleCloseEditDialog}
                 maxWidth="lg"
                 fullWidth
                 PaperProps={{
@@ -659,14 +701,60 @@ const TableEvents = () => {
                     <EventForm
                         onSubmit={handleUpdateEvent}
                         onCancel={handleCloseEditDialog}
-                        loading={updateEventMutation.isPending}
+                        loading={updateEventMutation.isPending || isSubmitting}
                         isEdit={true}
                         defaultValues={editingEvent}
                     />
                 </DialogContent>
             </Dialog>
-
-
+            {/* Delete Emergency Fund dialog */}
+            < Dialog
+                open={openDeleteDialog}
+                onClose={''}
+                maxWidth="lg"
+                PaperProps={{
+                    sx: {
+                        borderRadius: "12px",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.1)",
+                        maxHeight: "90vh",
+                    }
+                }}
+            >
+                <DialogTitle sx={{
+                    pb: 1,
+                    borderBottom: "1px solid #e0e0e0",
+                    fontSize: "16px",
+                    fontWeight: 600
+                }}>
+                    Are you sure you want to delete the Event
+                </DialogTitle>
+                <DialogContent sx={{ pt: 3 }}>
+                    <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
+                        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 3 }}>
+                            <Button
+                                variant="outlined"
+                                onClick={handleCloseCreateDialog}
+                              disabled={deleteEventLoading}
+                                sx={commonCancelStyles}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="error"
+                                sx={{
+                                    color: "#fff !important",
+                                }}
+                                onClick={onSubmitDeleteEvent}
+                             disabled={deleteEventLoading}
+                            >
+                                {deleteEventLoading ? 'Deleting...' : 'Delete'}
+                            </Button>
+                        </Box>
+                    </Grid>
+                </DialogContent>
+            </Dialog >
 
             {/* Snackbar for notifications */}
             <Snackbar

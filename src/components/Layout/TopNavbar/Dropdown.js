@@ -118,47 +118,46 @@ const Dropdown = ({
                     }
                 }}
             >
-                {displayOptions.map((option, index) => (
-                    <React.Fragment key={option.id}>
-                        <MenuItem
-                            onClick={() => handleOptionSelect(option)}
-                            sx={{
-                                py: 1.5,
-                                px: 2,
+                {displayOptions.map((option, index) => [
+                    <MenuItem
+                        key={`${option.id}-item`}
+                        onClick={() => handleOptionSelect(option)}
+                        sx={{
+                            py: 1.5,
+                            px: 2,
+                            '&:hover': {
+                                backgroundColor: '#F3F4F6',
+                            },
+                            '&.Mui-selected': {
+                                backgroundColor: '#EFF6FF',
+                                color: '#1D4ED8',
                                 '&:hover': {
-                                    backgroundColor: '#F3F4F6',
+                                    backgroundColor: '#DBEAFE',
                                 },
-                                '&.Mui-selected': {
-                                    backgroundColor: '#EFF6FF',
-                                    color: '#1D4ED8',
-                                    '&:hover': {
-                                        backgroundColor: '#DBEAFE',
-                                    },
-                                },
-                            }}
-                            selected={selectedOption?.id === option.id}
-                        >
-                            {option.icon && (
-                                <ListItemIcon sx={{ minWidth: 36 }}>
-                                    {option.icon}
-                                </ListItemIcon>
-                            )}
-                            <ListItemText>
-                                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                    {option.label}
-                                </Typography>
-                                {option.description && (
-                                    <Typography variant="caption" color="text.secondary">
-                                        {option.description}
-                                    </Typography>
-                                )}
-                            </ListItemText>
-                        </MenuItem>
-                        {index < displayOptions.length - 1 && option.divider && (
-                            <Divider sx={{ my: 0.5 }} />
+                            },
+                        }}
+                        selected={selectedOption?.id === option.id}
+                    >
+                        {option.icon && (
+                            <ListItemIcon sx={{ minWidth: 36 }}>
+                                {option.icon}
+                            </ListItemIcon>
                         )}
-                    </React.Fragment>
-                ))}
+                        <ListItemText>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {option.label}
+                            </Typography>
+                            {option.description && (
+                                <Typography variant="caption" color="text.secondary">
+                                    {option.description}
+                                </Typography>
+                            )}
+                        </ListItemText>
+                    </MenuItem>,
+                    index < displayOptions.length - 1 && option.divider && (
+                        <Divider key={`${option.id}-divider`} sx={{ my: 0.5 }} />
+                    )
+                ].filter(Boolean))}
             </Menu>
         </Box>
     );

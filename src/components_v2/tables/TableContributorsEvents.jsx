@@ -47,8 +47,26 @@ const TableEventsContributors = ({ id }) => {
     });
     const updateEventPaymentStatusMutation = useEventsContributorsStatus();
 
+    // Create params object for API call
+    const getApiParams = () => {
+        const params = {};
+        if (debounceSearch) {
+            params.search = debounceSearch;
+        }
+        if (select !== "") {
+            // Map select values to status values
+            const statusMap = {
+                0: 'paid',
+                1: 'host', 
+                2: 'unpaid'
+            };
+            params.status = statusMap[select];
+        }
+        return params;
+    };
+
     //  const { data: eventsContributors, refetch, isLoading: eventsLoading, error: eventsError } = useEventsContributors(id);
-    const { data: eventsContributors, isLoading: eventsLoading, error: eventsError } = useEventsContributors(id, { search: debounceSearch });
+    const { data: eventsContributors, isLoading: eventsLoading, error: eventsError } = useEventsContributors(id, getApiParams());
     const { data: singleEvent } = useSingleEvents(id && id);
     console.log(eventsContributors, 'eventsContributors');
     const handleChange = (event) => {
@@ -78,16 +96,6 @@ const TableEventsContributors = ({ id }) => {
 
     const handleCloseSnackbar = () => {
         setSnackbar(prev => ({ ...prev, open: false }));
-    };
-    const isEventClosed = (event) => {
-        if (!event.eventClosed) {
-            return false;
-        }
-        const eventClosedDate = new Date(event.eventClosed);
-        const today = new Date();
-        eventClosedDate.setHours(0, 0, 0, 0);
-        today.setHours(0, 0, 0, 0);
-        return eventClosedDate <= today;
     };
 
     const handleSearch = (e) => {
@@ -133,7 +141,7 @@ const TableEventsContributors = ({ id }) => {
                     >
                         <FormControl sx={{ minWidth: "115px" }} size="small">
                             <InputLabel id="demo-select-small">Select</InputLabel>
-                            <Select
+                                                        <Select
                                 labelId="demo-simple-select-label"
                                 id="demo-simple-select"
                                 value={select}
@@ -141,11 +149,10 @@ const TableEventsContributors = ({ id }) => {
                                 onChange={handleChange}
                                 className="select"
                             >
-                                <MenuItem value={0}>This Day</MenuItem>
-                                <MenuItem value={1}>This Weekly</MenuItem>
-                                <MenuItem value={2}>This Monthly</MenuItem>
-                                <MenuItem value={3}>This Yearly</MenuItem>
-                                <MenuItem value={4}>All Time</MenuItem>
+                                <MenuItem value="">All</MenuItem>
+                                <MenuItem value={0}>Paid</MenuItem>
+                                <MenuItem value={1}>Host</MenuItem>
+                                
                             </Select>
                         </FormControl>
                     </Box>
@@ -187,16 +194,34 @@ const TableEventsContributors = ({ id }) => {
                                     </TableCell>
                                 </TableRow>
                             </TableHead>
-                            <TableBody>
-                                {(
-                                    // rowsPerPage > 0
-                                    // ? rows.slice(
-                                    //     page * rowsPerPage,
-                                    //     page * rowsPerPage + rowsPerPage
-                                    // )
-                                    // :
-                                    eventsContributors.data
-                                ).map((row) => (
+                            <TableBody sx={{ minHeight: '300px', position: 'relative' }}>
+                                {eventsLoading ? (
+                                    <TableRow>
+                                        <TableCell 
+                                            colSpan={3} 
+                                            sx={{ 
+                                                height: '300px',
+                                                textAlign: 'center',
+                                                border: 'none'
+                                            }}
+                                        >
+                                            <Box 
+                                                sx={{ 
+                                                    position: 'absolute',
+                                                    top: '50%',
+                                                    left: '50%',
+                                                    transform: 'translate(-50%, -50%)',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center'
+                                                }}
+                                            >
+                                                <CircularProgress />
+                                            </Box>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    eventsContributors.data?.map((row) => (
                                     <TableRow
                                         key={row.id}
                                         sx={{
@@ -214,9 +239,7 @@ const TableEventsContributors = ({ id }) => {
                                         </TableCell>
                                         <TableCell className="text-black border-bottom">
                                             <FormControl size="small" sx={{ minWidth: 120 }}
-                                                disabled={
-                                                    isEventClosed(singleEvent?.data) || row.paymentStatus === 'host'
-                                                }
+                                                disabled={row.paymentStatus === 'host'}
                                             >
                                                 <Select
                                                     value={row.paymentStatus}
@@ -225,13 +248,13 @@ const TableEventsContributors = ({ id }) => {
                                                     }
                                                 >
                                                     <MenuItem value="paid">Paid</MenuItem>
-                                                    <MenuItem value="unpaid">Unpaid</MenuItem>
                                                     <MenuItem value="host">Host</MenuItem>
                                                 </Select>
                                             </FormControl>
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                ))
+                                )}
                                 {/* {emptyRows > 0 && (
                                     <TableRow style={{ height: 53 * emptyRows }}>
                                         <TableCell className="border-bottom" colSpan={9} />

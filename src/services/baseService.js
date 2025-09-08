@@ -5,19 +5,20 @@ export class BaseService {
     constructor(resource) {
         this.resource = resource;
     }
-
     // Get all items
     async getAll(params = {}) {
-
-        console.log("params", this.resource);
         try {
-            const response = await apiHelpers.get(`/${this.resource}`, { params });
+            const response = await apiHelpers.get(`/${this.resource}`, {
+                params: {
+                    financeYearId: params
+                }
+            });
+
             return handleApiSuccess(response);
         } catch (error) {
             throw handleApiError(error);
         }
     }
-
     // Get single item by ID
     async getById(id) {
         try {
@@ -27,7 +28,6 @@ export class BaseService {
             throw handleApiError(error);
         }
     }
-
     // Create new item
     async create(data) {
         try {
@@ -37,7 +37,6 @@ export class BaseService {
             throw handleApiError(error);
         }
     }
-
     // Update item by ID
     async update(id, data) {
         try {
@@ -47,7 +46,6 @@ export class BaseService {
             throw handleApiError(error);
         }
     }
-
     // Patch item by ID
     async patch(id, data) {
         try {
@@ -57,7 +55,6 @@ export class BaseService {
             throw handleApiError(error);
         }
     }
-
     // Delete item by ID
     async delete(id) {
         try {
@@ -67,7 +64,6 @@ export class BaseService {
             throw handleApiError(error);
         }
     }
-
     // Upload file
     async uploadFile(formData) {
         try {
@@ -77,7 +73,6 @@ export class BaseService {
             throw handleApiError(error);
         }
     }
-
     // Download file
     async downloadFile(id, filename = null) {
         try {

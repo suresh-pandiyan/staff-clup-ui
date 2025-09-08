@@ -14,11 +14,14 @@ import Shares from "./pages/shares";
 import Members from "./pages/members";
 import ChitFunds from "./pages/chit-funds";
 import Loans from "./pages/loans";
-import EmergencyFunds from "./pages/emergency-funds";
 import Events from "./pages/events";
 import Login from "./pages/login";
 import Dashboard from "./pages/dashboard/Analytics";
+import { CircularProgress } from "@mui/material";
+import { commonUndefinedLoadingStyles } from "./components_v2/styles/commonStyles";
 const EventsContributors = React.lazy(() => import('./pages/eventsContributors'));
+const EmergencyFunds = React.lazy(() => import('./pages/emergency-funds'));
+const EmergencyView = React.lazy(() => import('./pages/emergency-funds/emergencyViews'));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -71,7 +74,12 @@ const AppLayout = ({ active, toggleActive }) => {
 
       <div className="main-content">
         <ScrollToTop />
-        <React.Suspense fallback={<div>Loading...</div>}>
+        <React.Suspense fallback={
+          <div style={commonUndefinedLoadingStyles}>
+          <CircularProgress variant="determinate" value={25} />
+        </div>}
+        >
+
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Navigate to="/login" replace />} />
@@ -83,10 +91,11 @@ const AppLayout = ({ active, toggleActive }) => {
             <Route path="/shares" element={<ProtectedRoute><Shares /></ProtectedRoute>} />
             <Route path="/chitfunds" element={<ProtectedRoute><ChitFunds /></ProtectedRoute>} />
             <Route path="/loans" element={<ProtectedRoute><Loans /></ProtectedRoute>} />
-            <Route path="/emergency-funds" element={<ProtectedRoute><EmergencyFunds /></ProtectedRoute>} />
             <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-            <Route path="/events/contributors/:id" element={<ProtectedRoute><EventsContributors /></ProtectedRoute>} />
+            <Route path="/emergency-funds" element={<ProtectedRoute><EmergencyFunds /></ProtectedRoute>} />
+            <Route path="/emergency-funds/:id" element={<ProtectedRoute><EmergencyView /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/events/contributors/:id" element={<ProtectedRoute><EventsContributors /></ProtectedRoute>} />
 
             {/* Dashboard Sub-routes */}
             <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

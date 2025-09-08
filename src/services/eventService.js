@@ -8,10 +8,31 @@ export class EventService extends BaseService {
     }
 
     // Override getAll method to use mock data for demonstration
-    async getAll(params = {}) {
+    async getAll(financialYearId, params = {}) {
         try {
-            // Simulate API delay
-            const response = await apiHelpers.get(`/events/financial-year/${params}`);
+            // Build query parameters for pagination, search, etc.
+            const queryParams = new URLSearchParams();
+
+            if (params.page !== undefined) {
+                queryParams.append('page', params.page + 1); // API expects 1-based pagination
+            }
+            if (params.rowsPerPage !== undefined) {
+                queryParams.append('limit', params.rowsPerPage);
+            }
+            if (params.search) {
+                queryParams.append('search', params.search);
+            }
+            if (params.sortBy) {
+                queryParams.append('sortBy', params.sortBy);
+            }
+            if (params.sortOrder) {
+                queryParams.append('sortOrder', params.sortOrder);
+            }
+
+            const queryString = queryParams.toString();
+            const url = `/events/financial-year/${financialYearId}${queryString ? `?${queryString}` : ''}`;
+
+            const response = await apiHelpers.get(url);
             return response;
 
         } catch (error) {
@@ -183,7 +204,7 @@ export class EventService extends BaseService {
             throw error;
         }
     }
- Z   // async getAllContributors(eventId) {
+    Z   // async getAllContributors(eventId) {
     //     try {
     //         const response = await apiHelpers.get(`/events/contributors/${eventId}`);
     //         return response;
@@ -193,21 +214,19 @@ export class EventService extends BaseService {
     // }
 
     // EventService.js
-async getAllContributors(eventId, params = {}) {
-    try {
-        const response = await apiHelpers.get(`/events/contributors/${eventId}`, {
-            params, // <-- add this to send ?search=...
-        });
-        return response;
-    } catch (error) {
-        throw error;
+    async getAllContributors(eventId, params = {}) {
+        try {
+            const response = await apiHelpers.get(`/events/contributors/${eventId}`, {
+                params, // <-- add this to send ?search=...
+            });
+            return response;
+        } catch (error) {
+            throw error;
+        }
     }
-}
 
 
     async updateEventContributorsStatus(eventId, userId, eventData) {
-        console.log(eventId, userId, eventData, 'eventData event update');
-
         try {
             const response = await apiHelpers.patch(
                 `/events/${eventId}/contributors/${userId}/status`,

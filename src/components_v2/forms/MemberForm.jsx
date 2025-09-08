@@ -16,6 +16,7 @@ import {
     Checkbox,
     FormControlLabel,
 } from '@mui/material';
+import { commonSelectStyles, commonTextFieldStyles } from '../styles/commonStyles';
 
 // Validation schema
 const memberSchema = yup.object({
@@ -156,39 +157,8 @@ const MemberForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, i
         onSubmit(data);
     };
 
-    const commonTextFieldStyles = {
-        "& .MuiInputBase-root": {
-            border: "1px solid #D5D9E2",
-            backgroundColor: "#fff",
-            borderRadius: "7px",
-        },
-        "& .MuiInputBase-root::before": {
-            border: "none",
-        },
-        "& .MuiInputBase-root:hover::before": {
-            border: "none",
-        },
-        "& .MuiInputBase-root:hover:hover:not(.Mui-disabled, .Mui-error)::before": {
-            border: "none",
-        },
-    };
 
-    const commonSelectStyles = {
-        "& .MuiInputBase-root": {
-            border: "1px solid #D5D9E2",
-            backgroundColor: "#fff",
-            borderRadius: "7px",
-        },
-        "& .MuiInputBase-root::before": {
-            border: "none",
-        },
-        "& .MuiInputBase-root:hover::before": {
-            border: "none",
-        },
-        "& .MuiInputBase-root:hover:hover:not(.Mui-disabled, .Mui-error)::before": {
-            border: "none",
-        },
-    };
+
 
     return (
         <form component="form" onSubmit={handleSubmit(onSubmitForm)}>

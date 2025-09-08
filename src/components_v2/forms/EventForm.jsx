@@ -19,50 +19,15 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import { useFinancialYears } from '../../hooks';
 import { useApp } from '../../contexts/AppContext';
+import { commonTextFieldStyles, commonSelectStyles, commonFormLabelStyles } from '../styles/commonStyles';
+import { eventSchema } from '../validiations/FormValidiations';
 
 // Validation schema
-const eventSchema = yup.object({
-    // Employee Information
-    eventName: yup
-        .string()
-        .required('Event Name is required')
-        .max(50, 'Event Name cannot be more than 50 characters'),
-    eventDescription: yup
-        .string()
-        .required('Event Description is required')
-        .max(100, 'Event Description cannot be more than 100 characters'),
-    eventLocation: yup
-        .string()
-        .required('Event Location is required')
-        .max(20, 'Event Location cannot be more than 20 characters'),
-    eventAmount: yup
-        .mixed()
-        .test('is-number', 'Event Amount must be a number', (value) => {
-            if (value === '' || value === null || value === undefined) return false;
-            const num = Number(value);
-            return !isNaN(num) && num > 0;
-        })
-        .required('Event Amount is required'),
-    eventClosed: yup
-        .string()
-        .required('Event Closed date is required'),
-    eventTime: yup
-        .mixed()
-        .test('is-valid-time', 'Event Time is required', (value) => {
-            if (value === null || value === undefined || value === '') return false;
-            if (value && typeof value.isValid === 'function') {
-                return value.isValid();
-            }
-            return true;
-        })
-        .required('Event Time is required'),
-    financeYearId: yup
-        .string()
-        .required('Financial Year is required')
-});
 
 const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, isEdit = false }) => {
     const { data: financialYears = [], isLoading: financialYearsLoading } = useFinancialYears();
+    console.log(financialYears ,'financialYears EventForm');
+    
     // const { selectedFinancialYear } = useApp();
     // Find the currently active financial year
     const activeFinancialYear = financialYears?.data?.find(year => year.currentlyActive);
@@ -79,7 +44,7 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
         resolver: yupResolver(eventSchema),
         defaultValues: {
             eventName: '',
-            hostEmployeeId:'',
+            hostEmployeeId: '',
             eventDescription: '',
             eventLocation: '',
             eventAmount: '',
@@ -177,7 +142,6 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
                 })() : null,
                 financeYearId: getFinanceYearId(),
             };
-            console.log('Resetting form with data:', formData);
             reset(formData);
         }
     }, [isEdit, defaultValues, reset, defaultfinanceYearId]);
@@ -185,12 +149,7 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
     // Additional useEffect to ensure financial year is set in edit mode
     useEffect(() => {
         if (isEdit && defaultValues && defaultValues !== null && financialYears?.data) {
-            console.log('Edit mode - checking financial year:', {
-                defaultValues: defaultValues,
-                financeYearId: defaultValues?.financeYearId,
-                financialYears: financialYears.data
-            });
-
+       
             // Try to find the financial year from various possible sources
             let targetFinanceYearId = null;
 
@@ -227,48 +186,20 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
     }, [isEdit, defaultValues, financialYears?.data, setValue]);
 
     const onSubmitForm = (data) => {
+        console.log('Raw form data received:', data);
+        
         // Convert dayjs time object to string format for backend
         const formData = {
             ...data,
             eventTime: data.eventTime && data.eventTime.isValid ? data.eventTime.format('HH:mm') : null
         };
-        console.log('Form submitted with data:', formData);
+        
+        console.log('Processed form data:', formData);
+        console.log('Form validation errors:', errors);
+        
         onSubmit(formData);
     };
 
-    const commonTextFieldStyles = {
-        "& .MuiInputBase-root": {
-            border: "1px solid #D5D9E2",
-            backgroundColor: "#fff",
-            borderRadius: "7px",
-        },
-        "& .MuiInputBase-root::before": {
-            border: "none",
-        },
-        "& .MuiInputBase-root:hover::before": {
-            border: "none",
-        },
-        "& .MuiInputBase-root:hover:hover:not(.Mui-disabled, .Mui-error)::before": {
-            border: "none",
-        },
-    };
-
-    const commonSelectStyles = {
-        "& .MuiInputBase-root": {
-            border: "1px solid #D5D9E2",
-            backgroundColor: "#fff",
-            borderRadius: "7px",
-        },
-        "& .MuiInputBase-root::before": {
-            border: "none",
-        },
-        "& .MuiInputBase-root:hover::before": {
-            border: "none",
-        },
-        "& .MuiInputBase-root:hover:hover:not(.Mui-disabled, .Mui-error)::before": {
-            border: "none",
-        },
-    };
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -276,7 +207,7 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
                 <Grid container spacing={2} columnSpacing={{ xs: 1, sm: 2, md: 2, lg: 3 }}>
                     <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }} sx={{ marginTop: '30px' }}>
                         <FormControl fullWidth error={!!errors.eventName}>
-                            <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
+                            <Typography component="label" sx={commonFormLabelStyles} className="text-black">
                                 Event Name *
                             </Typography>
                             <Controller
@@ -299,8 +230,8 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
 
                     <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }} sx={{ marginTop: '30px' }}>
                         <FormControl fullWidth error={!!errors.hostEmployeeId}>
-                            <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
-                            Host EmployeeId *
+                            <Typography component="label" sx={commonFormLabelStyles} className="text-black">
+                                Host EmployeeId *
                             </Typography>
                             <Controller
                                 name="hostEmployeeId"
@@ -320,9 +251,9 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
                         </FormControl>
                     </Grid>
 
-                    <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }} sx={{ marginTop: '30px' ,display:'none'}}>
+                    <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }} sx={{ marginTop: '30px', display: 'none' }}>
                         <FormControl fullWidth error={!!errors.financeYearId}>
-                            <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
+                            <Typography component="label" sx={commonFormLabelStyles} className="text-black">
                                 Financial Year *
                             </Typography>
                             <Controller
@@ -335,11 +266,21 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
                                             {...field}
                                             variant="filled"
                                             error={!!errors.financeYearId}
-                                            sx={commonSelectStyles}
+                                            sx={{
+                                                ...commonSelectStyles,
+                                                ...(financialYearsLoading && {
+                                                    '& .MuiSelect-select': {
+                                                        textAlign: 'center',
+                                                        display: 'flex',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center'
+                                                    }
+                                                })
+                                            }}
                                             disabled={financialYearsLoading}
                                             displayEmpty
                                         >
-                                            <MenuItem value="" disabled>
+                                            <MenuItem value="" disabled sx={{ textAlign: 'center' }}>
                                                 {financialYearsLoading ? 'Loading...' : 'Select Financial Year'}
                                             </MenuItem>
                                             {financialYears?.data?.map((year) => (
@@ -357,7 +298,7 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
 
                     <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}  >
                         <FormControl fullWidth error={!!errors.eventAmount}>
-                            <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
+                            <Typography component="label" sx={commonFormLabelStyles} className="text-black">
                                 Event Amount *
                             </Typography>
                             <Controller
@@ -391,7 +332,7 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
 
                     <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
                         <FormControl fullWidth error={!!errors.eventLocation}>
-                            <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
+                            <Typography component="label" sx={commonFormLabelStyles} className="text-black">
                                 Event Location *
                             </Typography>
                             <Controller
@@ -416,7 +357,7 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
 
                     <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
                         <FormControl fullWidth error={!!errors.eventClosed}>
-                            <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
+                            <Typography component="label" sx={commonFormLabelStyles} className="text-black">
                                 Event Closed *
                             </Typography>
                             <Controller
@@ -442,7 +383,7 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
 
                     <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 6 }}>
                         <FormControl fullWidth error={!!errors.eventTime}>
-                            <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
+                            <Typography component="label" sx={commonFormLabelStyles} className="text-black">
                                 Event Time *
                             </Typography>
                             <Controller
@@ -478,7 +419,7 @@ const EventForm = ({ onSubmit, onCancel, loading = false, defaultValues = {}, is
 
                     <Grid size={{ xs: 12, sm: 12, md: 12, lg: 12, xl: 12 }}>
                         <FormControl fullWidth error={!!errors.eventDescription}>
-                            <Typography component="label" sx={{ fontWeight: "500", fontSize: "14px", mb: "10px", display: "block" }} className="text-black">
+                            <Typography component="label" sx={commonFormLabelStyles} className="text-black">
                                 Event Description *
                             </Typography>
                             <Controller
