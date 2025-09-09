@@ -28,6 +28,7 @@ import { formatDate } from "../../helpers/formatDate";
 import { commonCancelStyles, commonSubmitStyle } from "../styles/commonStyles";
 import { useApp } from "../../contexts/AppContext";
 import { Link } from "react-router-dom";
+import EmergencyPaymentForm from "../forms/EmergencyPaymentForm";
 
 
 
@@ -157,6 +158,7 @@ const TableDetailsEmergency = () => {
                     </Button>
                 </Box>
                 {/* Table */}
+                <EmergencyPaymentForm />
                 <TableContainer
                     component={Paper}
                     sx={{
@@ -164,8 +166,8 @@ const TableDetailsEmergency = () => {
                         borderRadius: "7px",
                     }}
                     className="rmui-table border"
-                    >
-                            <Typography variant="h5" sx={{padding: "10px 20px"}}>Payment History</Typography>
+                >
+                    <Typography variant="h5" sx={{ padding: "10px 20px" }}>Payment History</Typography>
                     <Table sx={{ minWidth: 750 }} aria-label="Recent Leads Table">
                         <TableHead className="bg-primary-50">
                             <TableRow
@@ -176,7 +178,7 @@ const TableDetailsEmergency = () => {
                                         fontSize: "14px",
                                     },
                                 }}
-                                >
+                            >
                                 <TableCell className="text-black border-bottom">
                                     Name
                                 </TableCell>
@@ -211,7 +213,6 @@ const TableDetailsEmergency = () => {
                         </TableFooter>
                     </Table>
                 </TableContainer>
-
             </Card >
             {/* Create Emergency Fund dialog */}
             < Dialog

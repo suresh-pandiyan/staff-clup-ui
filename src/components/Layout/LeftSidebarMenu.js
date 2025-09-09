@@ -200,12 +200,8 @@ const LeftSidebarMenu = ({ toggleActive }) => {
               className={`sidebar-menu-link ${isActiveLink(
                 "/members/"
               )}`}
-            >
-
+            > 
               <GroupsIcon color="primary" />
-
-
-            
               <Typography component={"span"} className="title">
                 Members
               </Typography>
@@ -217,12 +213,8 @@ const LeftSidebarMenu = ({ toggleActive }) => {
                 "/shares/"
               )}`}
             >
-
               <CurrencyExchangeIcon color="primary" />
-
-             
-
-              <Typography component={"span"} className="title">
+ <Typography component={"span"} className="title">
                 Share
               </Typography>
             </Link>
@@ -231,11 +223,7 @@ const LeftSidebarMenu = ({ toggleActive }) => {
               to="/chitfunds/"
               className={`sidebar-menu-link ${isActiveLink("/chitfunds/")}`}
             >
-
               <SavingsIcon color="primary" />
-
-             
-
               <Typography component={"span"} className="title">
                 Chitfund
               </Typography>
@@ -245,16 +233,21 @@ const LeftSidebarMenu = ({ toggleActive }) => {
               to="/loans/"
               className={`sidebar-menu-link ${isActiveLink("/loans/")}`}
             >
-
               <AttachMoneyIcon color="primary" />
-
-  
-
               <Typography component={"span"} className="title">
                 Loan
               </Typography>
             </Link>
 
+            <Link
+              to="/emergency-funds/"
+              className={`sidebar-menu-link ${isActiveLink("/emergency-funds/")}`}
+            >
+              < HealthAndSafetyIcon color="primary" />
+              <Typography component={"span"} className="title">
+                Emergency Fund
+              </Typography>
+            </Link>
             <Link
               to="/events/"
               className={`sidebar-menu-link ${isActiveLink("/events/")}`}
@@ -269,19 +262,7 @@ const LeftSidebarMenu = ({ toggleActive }) => {
               </Typography>
             </Link>
 
-            <Link
-              to="/emergency-funds/"
-              className={`sidebar-menu-link ${isActiveLink("/emergency-funds/")}`}
-            >
-
-              < HealthAndSafetyIcon color="primary" />
-
-   
-
-              <Typography component={"span"} className="title">
-                Emergency Fund
-              </Typography>
-            </Link>
+          
 
 
             <Typography
