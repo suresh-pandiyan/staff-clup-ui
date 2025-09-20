@@ -73,6 +73,7 @@ const TableEmergency = () => {
                 message: "Emergency fund created successfully!",
                 severity: 'success'
             });
+            handleCloseCreateDialog();
         } catch (error) {
             console.log(error, 'error in table emergency');
             setSnackbar({
@@ -82,7 +83,6 @@ const TableEmergency = () => {
             });
         } finally {
             setLoading(false);
-            handleCloseCreateDialog();
         }
 
     };
@@ -98,6 +98,7 @@ const TableEmergency = () => {
             });
             // refetch();
             handleCloseCreateDialog();
+            
         } catch (error) {
             setSnackbar({
                 open: true,
@@ -110,7 +111,6 @@ const TableEmergency = () => {
         }
 
     };
-
     return (
         <>
             <Card

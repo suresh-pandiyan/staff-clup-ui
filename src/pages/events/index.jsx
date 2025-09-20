@@ -18,7 +18,6 @@ const Events = () => {
             </Link>
           </li>
           <li>Events</li>
-
         </ul>
       </div>
       <React.Suspense fallback={
