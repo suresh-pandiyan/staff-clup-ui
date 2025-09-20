@@ -227,7 +227,7 @@ const TableSharesMembers = () => {
                         }}
                         startIcon={<i className="material-symbols-outlined" style={{ fontSize: "20px" }}>calendar_today</i>}
                     >
-                        Update Share Dates
+                        Update Share
                     </Button>
                 </Box>
 
