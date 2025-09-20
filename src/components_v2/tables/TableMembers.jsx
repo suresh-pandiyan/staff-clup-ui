@@ -27,6 +27,7 @@ import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import { useUsers } from "../../hooks/useUsers";
 import MemberForm from "../forms/MemberForm";
+import MemberShareModal from "../modals/MemberShareModal";
 import { userService } from "../../services/userService";
 
 function TablePaginationActions(props) {
@@ -93,7 +94,9 @@ const TableMembers = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [openCreateDialog, setOpenCreateDialog] = useState(false);
     const [openEditDialog, setOpenEditDialog] = useState(false);
+    const [openShareModal, setOpenShareModal] = useState(false);
     const [editingMember, setEditingMember] = useState(null);
+    const [selectedMemberForShares, setSelectedMemberForShares] = useState(null);
     const [loading, setLoading] = useState(false);
     const [snackbar, setSnackbar] = useState({
         open: false,
@@ -139,6 +142,22 @@ const TableMembers = () => {
     const handleCloseEditDialog = () => {
         setOpenEditDialog(false);
         setEditingMember(null);
+    };
+
+    const handleOpenShareModal = (member) => {
+        setSelectedMemberForShares(member);
+        setOpenShareModal(true);
+    };
+
+    const handleCloseShareModal = () => {
+        setOpenShareModal(false);
+        setSelectedMemberForShares(null);
+    };
+
+    const handleUpdateShares = (updatedShares) => {
+        console.log('Updated shares for member:', selectedMemberForShares?.id, updatedShares);
+        // You can add additional logic here if needed
+        // For example, refresh member data or update local state
     };
 
     const handleCreateMember = async (formData) => {
@@ -399,6 +418,10 @@ const TableMembers = () => {
                                 </TableCell>
 
                                 <TableCell className="text-black border-bottom">
+                                    Share ₹
+                                </TableCell>
+
+                                <TableCell className="text-black border-bottom">
                                     Joining Date
                                 </TableCell>
 
@@ -485,6 +508,20 @@ const TableMembers = () => {
                                         <TableCell className="border-bottom">{row.phone}</TableCell>
 
                                         <TableCell className="border-bottom">{row.designation}</TableCell>
+
+                                        <TableCell className="border-bottom">
+                                            <span 
+                                                onClick={() => handleOpenShareModal(row)}
+                                                style={{ 
+                                                    cursor: 'pointer', 
+                                                    color: '#1976d2',
+                                                    textDecoration: 'underline',
+                                                    fontWeight: '500'
+                                                }}
+                                            >
+                                                Share ₹
+                                            </span>
+                                        </TableCell>
 
                                         <TableCell className="border-bottom">
                                             {formatDate(row?.joinDate)}
@@ -631,6 +668,14 @@ const TableMembers = () => {
                     />
                 </DialogContent>
             </Dialog>
+
+            {/* Member Share Modal */}
+            <MemberShareModal
+                open={openShareModal}
+                onClose={handleCloseShareModal}
+                member={selectedMemberForShares}
+                onUpdateShares={handleUpdateShares}
+            />
 
             {/* Snackbar for notifications */}
             <Snackbar

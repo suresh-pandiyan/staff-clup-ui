@@ -11,8 +11,7 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Grid,
-    Divider,
+    Card,
     Alert
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -21,18 +20,18 @@ const ShareForm = ({ onSubmit, onCancel, loading, financialYear }) => {
     const [formData, setFormData] = useState({
         year: financialYear || new Date().getFullYear(),
         months: {
-            january: { date: "" },
-            february: { date: "" },
-            march: { date: "" },
-            april: { date: "" },
-            may: { date: "" },
-            june: { date: "" },
-            july: { date: "" },
-            august: { date: "" },
-            september: { date: "" },
-            october: { date: "" },
-            november: { date: "" },
-            december: { date: "" }
+            january: { date: "2024-01-31", amount: 234500, status: "Paid" },
+            february: { date: "2024-02-29", amount: 234500, status: "Paid" },
+            march: { date: "2024-03-31", amount: 234500, status: "Paid" },
+            april: { date: "", amount: 234500, status: "Pending" },
+            may: { date: "", amount: 234500, status: "Pending" },
+            june: { date: "", amount: 234500, status: "Pending" },
+            july: { date: "", amount: 234500, status: "Pending" },
+            august: { date: "", amount: 234500, status: "Pending" },
+            september: { date: "", amount: 234500, status: "Pending" },
+            october: { date: "", amount: 234500, status: "Pending" },
+            november: { date: "", amount: 234500, status: "Pending" },
+            december: { date: "", amount: 234500, status: "Pending" }
         }
     });
 
@@ -60,7 +59,8 @@ const ShareForm = ({ onSubmit, onCancel, loading, financialYear }) => {
                 ...prev.months,
                 [monthKey]: {
                     ...prev.months[monthKey],
-                    [field]: value
+                    [field]: value,
+                    status: field === 'date' ? (value ? 'Paid' : 'Pending') : prev.months[monthKey].status
                 }
             }
         }));
@@ -85,110 +85,107 @@ const ShareForm = ({ onSubmit, onCancel, loading, financialYear }) => {
     };
 
     return (
-        <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+        <Card
+            sx={{
+                boxShadow: "none",
+                borderRadius: "7px",
+                mb: "25px",
+                padding: { xs: "18px", sm: "20px", lg: "25px" },
+            }}
+            className="rmui-card"
+        >
             {errors.general && (
                 <Alert severity="error" sx={{ mb: 2 }}>
                     {errors.general}
                 </Alert>
             )}
 
-            {/* <Grid container spacing={3} sx={{ mb: 3 }}>
-                <Grid item xs={12} md={6}>
-                    <TextField
-                        fullWidth
-                        label="Financial Year"
-                        value={formData.year}
-                        onChange={(e) => setFormData(prev => ({ ...prev, year: e.target.value }))}
-                        variant="outlined"
-                        size="small"
-                    />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                    <Typography variant="body2" color="text.secondary" sx={{ alignSelf: 'center', pt: 1 }}>
-                        Share amounts are managed from the backend system
-                    </Typography>
-                </Grid>
-            </Grid> */}
-
-            {/* <Divider sx={{ my: 2 }} /> */}
-            {/* 
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Monthly Share Due Dates
+            <Typography
+                variant="h3"
+                sx={{
+                    fontSize: { xs: "16px", md: "18px" },
+                    fontWeight: 700,
+                    mb: "25px",
+                }}
+                className="text-black"
+            >
+                Monthly Share Management - {formData.year}
             </Typography>
 
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Select due dates for each month. You can update months individually as needed.
-            </Typography> */}
-
-            <TableContainer component={Paper} sx={{ boxShadow: 'none', border: '1px solid #e0e0e0' }}>
-                <Table size="small">
-                    <TableHead>
-                        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                            <TableCell sx={{ fontWeight: 600, width: '120px' }}>Month</TableCell>
-                            <TableCell sx={{ fontWeight: 600, width: '200px' }}>Due Date</TableCell>
-                            <TableCell sx={{ fontWeight: 600, width: '100px' }}>Status</TableCell>
+            <TableContainer
+                component={Paper}
+                sx={{
+                    boxShadow: "none",
+                    borderRadius: "7px",
+                }}
+                className="rmui-table border"
+            >
+                <Table sx={{ minWidth: 650 }} aria-label="Monthly Shares Table">
+                    <TableHead className="bg-f6f7f9">
+                        <TableRow
+                            sx={{
+                                "& th": {
+                                    fontWeight: "500",
+                                    padding: "10px 20px",
+                                    fontSize: "14px",
+                                },
+                            }}
+                        >
+                            <TableCell className="text-black border-bottom">Month</TableCell>
+                            <TableCell className="text-black border-bottom">Amount</TableCell>
+                            <TableCell className="text-black border-bottom">Share Added Date</TableCell>
+                            <TableCell className="text-black border-bottom">Status</TableCell>
                         </TableRow>
                     </TableHead>
+
                     <TableBody>
                         {months.map((month) => (
-                            <TableRow key={month.key} sx={{ '&:nth-of-type(odd)': { backgroundColor: '#fafafa' } }}>
-                                <TableCell sx={{ fontWeight: 500 }}>
-                                    {month.label}
+                            <TableRow
+                                key={month.key}
+                                sx={{
+                                    "& td": {
+                                        padding: "15px 20px",
+                                        fontSize: "14px",
+                                    },
+                                }}
+                            >
+                                <TableCell className="text-black border-bottom">
+                                    <Typography sx={{ fontWeight: "600" }}>
+                                        {month.label}
+                                    </Typography>
                                 </TableCell>
-                                <TableCell>
-                                    <TextField
-                                        type="date"
-                                        size="small"
-                                        fullWidth
-                                        value={formData.months[month.key].date}
-                                        onChange={(e) => handleMonthChange(month.key, 'date', e.target.value)}
-                                        placeholder="Select date"
-                                        error={!!errors[month.key]}
-                                        InputLabelProps={{
-                                            shrink: true,
-                                        }}
-                                    />
+                                <TableCell className="text-black border-bottom">
+                                    <Typography sx={{ fontWeight: "500", color: "primary.main" }}>
+                                        ₹{formData.months[month.key].amount.toLocaleString()}
+                                    </Typography>
                                 </TableCell>
-                                <TableCell>
-                                    <Box sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1
-                                    }}>
-                                        {/* {formData.months[month.key].date ? (
-                                            <Box sx={{
-                                                width: 8,
-                                                height: 8,
-                                                borderRadius: '50%',
-                                                backgroundColor: 'success.main'
-                                            }} />
-                                        ) : (
-                                            <Box sx={{
-                                                width: 8,
-                                                height: 8,
-                                                borderRadius: '50%',
-                                                backgroundColor: 'grey.300'
-                                            }} />
-                                        )} */}
-
-                                        <Button
-                                            // onClick={handleClickOpen}
-                                            variant="outlined"
-                                            sx={{
-                                                textTransform: "capitalize",
-                                                borderRadius: "7px",
-                                                fontWeight: "500",
-                                                fontSize: "13px",
-                                                padding: "6px 13px",
+                                <TableCell className="border-bottom">
+                                    {formData.months[month.key].date ? (
+                                        <Typography sx={{ fontWeight: "500" }}>
+                                            {new Date(formData.months[month.key].date).toLocaleDateString('en-IN', {
+                                                day: 'numeric',
+                                                month: 'short',
+                                                year: 'numeric'
+                                            })}
+                                        </Typography>
+                                    ) : (
+                                        <TextField
+                                            size="small"
+                                            type="date"
+                                            value={formData.months[month.key].date}
+                                            onChange={(e) => handleMonthChange(month.key, 'date', e.target.value)}
+                                            disabled={loading}
+                                            sx={{ width: "150px" }}
+                                            InputLabelProps={{
+                                                shrink: true,
                                             }}
-                                            color="primary"
-                                        >
-                                            <AddIcon sx={{ position: "relative", top: "-1px" }} /> Add Share
-                                        </Button>
-                                        {/* <Typography variant="caption" color="text.secondary">
-                                            {formData.months[month.key].date ? 'Set' : 'Pending'}
-                                        </Typography> */}
-                                    </Box>
+                                        />
+                                    )}
+                                </TableCell>
+                                <TableCell className="border-bottom">
+                                    <div className={`trezo-badge ${formData.months[month.key].status === 'Paid' ? 'Confirmed' : 'Pending'}`}>
+                                        {formData.months[month.key].status}
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -201,24 +198,36 @@ const ShareForm = ({ onSubmit, onCancel, loading, financialYear }) => {
                     variant="outlined"
                     onClick={onCancel}
                     disabled={loading}
-                    sx={{ textTransform: 'none' }}
+                    sx={{ 
+                        textTransform: 'none',
+                        borderRadius: "8px",
+                        px: 3,
+                        py: 1
+                    }}
                 >
                     Cancel
                 </Button>
                 <Button
-                    type="submit"
+                    onClick={(e) => handleSubmit(e)}
                     variant="contained"
                     disabled={loading}
                     sx={{
-                        textTransform: 'none',
-                        backgroundColor: '#1976d2',
-                        '&:hover': { backgroundColor: '#1565c0' }
+                        backgroundColor: "#1976d2",
+                        color: "white",
+                        textTransform: "none",
+                        borderRadius: "8px",
+                        px: 3,
+                        py: 1,
+                        fontWeight: 500,
+                        "&:hover": {
+                            backgroundColor: "#1565c0",
+                        },
                     }}
                 >
-                    {loading ? 'Updating...' : 'Update Share Dates'}
+                    {loading ? 'Updating...' : 'Update Shares'}
                 </Button>
             </Box>
-        </Box>
+        </Card>
     );
 };
 
